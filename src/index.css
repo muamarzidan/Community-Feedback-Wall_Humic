@@ -1,9 +1,35 @@
 @import "tailwindcss";
 
+@theme {
+    --color-primary-50: #eaf2ff;
+    --color-primary-100: #bdd5ff;
+    --color-primary-200: #9dc1ff;
+    --color-primary-300: #70a5ff;
+    --color-primary-400: #5494ff;
+    --color-primary-500: #2979ff;
+    --color-primary-600: #256ee8;
+    --color-primary-700: #1d56b5;
+    --color-primary-800: #17438c;
+    --color-primary-900: #11336b;
+}
+
 * {
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
 body {
-    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }

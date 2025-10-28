@@ -1,9 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FcGoogle } from "react-icons/fc";
-import { FaFacebook } from "react-icons/fa";
-import { FaApple } from "react-icons/fa";
 import { HiOutlineEyeOff, HiOutlineEye } from "react-icons/hi";
+import RegisterBanner from '@/assets/images/register-banner-agora.png';
 
 
 export default function SignUpPage() {
@@ -11,31 +10,39 @@ export default function SignUpPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+    // Reset cursor to default on auth pages
+    useEffect(() => {
+        document.body.style.cursor = 'default';
+        return () => {
+            document.body.style.cursor = '';
+        };
+    }, []);
+
     const handleSubmit = (e) => {
         e.preventDefault();
         // TODO: Handle authentication logic here
         console.log('Register form submitted');
     };
     return (
-        <div className="min-h-screen flex items-center justify-center bg-white">
-            <div className="flex w-full max-w-5xl rounded-2xl overflow-hidden">
+        <div className="flex items-center justify-center min-h-screen bg-white">
+            <div className="flex w-full max-w-5xl overflow-hidden rounded-2xl">
                 {/* Left side */}
-                <div className="hidden md:block w-1/2 sm:flex items-center justify-center p-8">
+                <div className="items-center justify-center hidden w-1/2 p-8 md:block sm:flex">
                     <img
-                        src="/images/register-banner_humic_communityfeedbackwall.png"
+                        src={RegisterBanner}
                         alt="Signup illustration"
-                        className="rounded-2xl w-full max-w-md h-full"
+                        className="w-full h-full max-w-md rounded-2xl"
                     />
                 </div>
 
                 {/* Right side */}
-                <div className="w-full md:w-1/2 p-10">
-                    <div className="flex justify-end">
-                        <Link to="/" className="text-3xl font-bold hover:text-gray-700 transition-colors">Logo</Link>
+                <div className="w-full p-6 sm:p-10 md:w-1/2">
+                    <div className="flex sm:justify-end">
+                        <Link to="/" className="text-3xl font-bold transition-colors hover:text-gray-700">Logo</Link>
                     </div>
 
-                    <h2 className="text-2xl font-semibold mt-8">Sign up</h2>
-                    <p className="text-gray-500 text-sm mb-6">
+                    <h2 className="mt-8 text-2xl font-semibold">Sign up</h2>
+                    <p className="mb-6 text-sm text-gray-500">
                         Let's get you all set up so you can access your personal account.
                     </p>
 
@@ -44,7 +51,7 @@ export default function SignUpPage() {
                             <input
                                 type="text"
                                 placeholder="Full Name"
-                                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                                 required
                             />
                         </div>
@@ -52,7 +59,7 @@ export default function SignUpPage() {
                             <input
                                 type="email"
                                 placeholder="Email"
-                                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                                 required
                             />
                         </div>
@@ -60,7 +67,7 @@ export default function SignUpPage() {
                             <input
                                 type="tel"
                                 placeholder="Phone Number"
-                                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                                 required
                             />
                         </div>
@@ -68,7 +75,7 @@ export default function SignUpPage() {
                             <input
                                 type={showPassword ? "text" : "password"}
                                 placeholder="Password"
-                                className="w-full border border-gray-300 rounded-md px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                                 required
                             />
                             <button
@@ -87,7 +94,7 @@ export default function SignUpPage() {
                             <input
                                 type={showConfirmPassword ? "text" : "password"}
                                 placeholder="Confirm Password"
-                                className="w-full border border-gray-300 rounded-md px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                                 required
                             />
                             <button
@@ -104,14 +111,14 @@ export default function SignUpPage() {
                         </div>
 
                         <div className="flex items-start gap-2 text-sm text-gray-600">
-                            <input type="checkbox" className="accent-indigo-500 mt-1" required />
+                            <input type="checkbox" className="mt-1 cursor-pointer accent-primary-500" required />
                             <p>
                                 I agree to all the{" "}
-                                <a href="#" className="text-red-500 font-medium">
+                                <a href="#" className="font-medium text-red-500">
                                     Terms
                                 </a>{" "}
                                 and{" "}
-                                <a href="#" className="text-red-500 font-medium">
+                                <a href="#" className="font-medium text-red-500">
                                     Privacy Policies
                                 </a>
                             </p>
@@ -119,35 +126,27 @@ export default function SignUpPage() {
 
                         <button
                             type="submit"
-                            className="w-full bg-indigo-500 text-white py-2 rounded-md hover:bg-indigo-600 transition"
+                            className="w-full py-2 text-white transition-colors rounded-lg cursor-pointer bg-primary-500 hover:bg-primary-700"
                         >
                             Create account
                         </button>
 
-                        <p className="text-center text-sm text-gray-600">
+                        <p className="text-sm text-center text-gray-600">
                             Already have an account?{" "}
-                            <Link to="/login" className="text-red-500 font-medium hover:text-red-600">
+                            <Link to="/login" className="font-medium text-red-500 hover:text-red-600">
                                 Login
                             </Link>
                         </p>
 
                         <div className="flex items-center my-4">
                             <hr className="flex-grow border-gray-300" />
-                            <span className="px-2 text-gray-400 text-sm">Or Sign up with</span>
+                            <span className="px-2 text-sm text-gray-400">Or Sign up with</span>
                             <hr className="flex-grow border-gray-300" />
                         </div>
 
-                        <div className="w-full flex justify-center gap-4">
-                            <button type="button" className="w-full border border-gray-300 rounded-md px-6 py-2 hover:bg-gray-50 flex items-center justify-center gap-2">
-                                <FaFacebook className="w-5 h-5 text-blue-600" />
-                            </button>
-                            <button type="button" className="w-full border border-gray-300 rounded-md px-6 py-2 hover:bg-gray-50 flex items-center justify-center gap-2">
-                                <FcGoogle className="w-5 h-5" />
-                            </button>
-                            <button type="button" className="w-full border border-gray-300 rounded-md px-6 py-2 hover:bg-gray-50 flex items-center justify-center gap-2">
-                                <FaApple className="w-5 h-5" />
-                            </button>
-                        </div>
+                        <button type="button" className="flex items-center justify-center w-full gap-2 px-6 py-2 transition-colors border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-100">
+                            <FcGoogle className="w-5 h-5" />
+                        </button>
                     </form>
                 </div>
             </div>

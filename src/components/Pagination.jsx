@@ -3,22 +3,20 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
   const renderPageNumbers = () => {
     const pages = [];
-    // const showPages = 3; // Show current page + 1 before + 1 after
-
     // Always show first page
     if (currentPage > 2) {
       pages.push(
         <button
           key={1}
           onClick={() => onPageChange(1)}
-          className="px-3 py-1 text-sm bg-white rounded hover:bg-gray-50"
+          className="px-3 py-1 text-xl text-white cursor-pointer"
         >
           1
         </button>
       );
       
       if (currentPage > 3) {
-        pages.push(<span key="dots1" className="px-2 text-gray-400">...</span>);
+        pages.push(<span key="dots1" className="px-2 text-white">...</span>);
       }
     }
 
@@ -28,10 +26,10 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
         <button
           key={i}
           onClick={() => onPageChange(i)}
-          className={`px-3 py-1 text-sm rounded ${
+          className={`p-2 px-5 text-xl rounded-full cursor-pointer ${
             i === currentPage
-              ? 'bg-blue-500 text-white border-blue-500'
-              : 'bg-white hover:bg-gray-50'
+              ? 'bg-white text-primary-500 font-bold'
+              : 'text-white'
           }`}
         >
           {i}
@@ -42,14 +40,14 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
     // Always show last page
     if (currentPage < totalPages - 1) {
       if (currentPage < totalPages - 2) {
-        pages.push(<span key="dots2" className="px-2 text-gray-400">...</span>);
+        pages.push(<span key="dots2" className="px-2 text-white">...</span>);
       }
       
       pages.push(
         <button
           key={totalPages}
           onClick={() => onPageChange(totalPages)}
-          className="px-3 py-1 text-sm bg-white rounded hover:bg-gray-50"
+          className="px-3 py-1 text-xl text-white cursor-pointer"
         >
           {totalPages}
         </button>
@@ -62,31 +60,30 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
   if (totalPages <= 1) return null;
 
   return (
-    <div className="absolute bottom-4 left-4 z-50">
-      <div className="flex items-center gap-2 bg-white rounded-lg shadow-lg p-2">
+    <div className="flex justify-between items-center min-w-[270px] max-w-[270px] p-2 rounded-full bg-primary-500">
+        {/* Previous Button */}
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage <= 1}
-          className="p-1 hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           title="Previous Page"
         >
-          <ChevronLeft className="w-4 h-4 text-gray-600" />
+          <ChevronLeft className="w-6 h-6 text-white" />
         </button>
         
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 rounded-full">
           {renderPageNumbers()}
         </div>
-        
+        {/* Next Button */}
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage >= totalPages}
-          className="p-1 hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           title="Next Page"
         >
-          <ChevronRight className="w-4 h-4 text-gray-600" />
+          <ChevronRight className="w-6 h-6 text-white" />
         </button>
       </div>
-    </div>
   );
 };
 

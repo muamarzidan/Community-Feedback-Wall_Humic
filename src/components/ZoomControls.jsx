@@ -1,27 +1,25 @@
-import { Plus, Minus } from 'lucide-react';
+import { ZoomIn, ZoomOut } from 'lucide-react';
 
 const ZoomControls = ({ zoom, onZoomIn, onZoomOut }) => {
   return (
-    <div className="absolute bottom-4 right-4 z-50">
-      <div className="flex flex-col gap-2 bg-white rounded-lg shadow-lg p-2">
-        <button
-          onClick={onZoomIn}
-          className="p-1 flex justify-center items-center hover:bg-gray-100 rounded transition-colors"
-          title="Zoom In"
-        >
-          <Plus className="w-5 h-5 text-gray-600" />
-        </button>
-        {/* <div className="p-1 flex justify-center items-center py-1 text-xs text-gray-500 text-center min-w-[40px]">
-          {Math.round(zoom * 100)}%
-        </div> */}
-        <button
-          onClick={onZoomOut}
-          className="p-1 flex justify-center items-center hover:bg-gray-100 rounded transition-colors"
-          title="Zoom Out"
-        >
-          <Minus className="w-5 h-5 text-gray-600" />
-        </button>
+    <div className="flex flex-col items-center justify-center gap-2 w-fit">
+      <button
+        onClick={onZoomOut}
+        className="flex items-center justify-center p-3 transition-colors rounded-full cursor-pointer bg-primary-500 w-fit hover:bg-primary-700"
+        title="Zoom Out"
+      >
+        <ZoomOut className="w-6 h-6 text-gray-50" />
+      </button>
+      <div className="px-[12px] py-[15px] w-fit flex justify-center items-center text-xs text-gray-50 text-center min-w-[40px] bg-primary-500 rounded-full hover:bg-primary-700">
+        <span className="!text-xs">{Math.round(zoom * 100)}%</span>
       </div>
+      <button
+        onClick={onZoomIn}
+        className="flex items-center justify-center p-3 transition-colors rounded-full cursor-pointer bg-primary-500 w-fit hover:bg-primary-700"
+        title="Zoom In"
+      >
+        <ZoomIn className="w-6 h-6 text-gray-50" />
+      </button>
     </div>
   );
 };

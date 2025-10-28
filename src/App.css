@@ -1,13 +1,17 @@
-/* Global Styles */
 #root {
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
+  width: 100%;
+  min-height: 100vh;
 }
 
 body {
   margin: 0;
   padding: 0;
+}
+
+/* Canvas specific styles - apply only to canvas pages */
+.canvas-page {
+  width: 100vw;
+  height: 100vh;
   overflow: hidden;
 }
 
@@ -38,5 +42,3 @@ body {
 .modal-content::-webkit-scrollbar-thumb:hover {
   background: #a1a1a1;
 }
-
-/* Remove global canvas cursor - now handled by component */
