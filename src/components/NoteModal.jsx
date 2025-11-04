@@ -7,7 +7,6 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
     description: '',
     backgroundColor: '#fbbf24'
   });
-
   const colorOptions = [
     { name: 'Yellow', value: '#fbbf24' },
     { name: 'Pink', value: '#f472b6' },
@@ -16,7 +15,7 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
     { name: 'Purple', value: '#a78bfa' },
     { name: 'Orange', value: '#fb923c' }
   ];
-
+  
   useEffect(() => {
     if (note) {
       setFormData({
@@ -32,7 +31,7 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
       });
     }
   }, [note, isOpen]);
-
+  
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.title.trim()) return;
@@ -47,7 +46,6 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
     
     onClose();
   };
-
   const handleChange = (field, value) => {
     setFormData(prev => ({
       ...prev,

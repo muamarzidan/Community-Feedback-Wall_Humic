@@ -15,7 +15,7 @@ import NoteModal from './components/NoteModal';
 import './App.css';
 
 function App() {
-  const { notes, addNote, updateNote, deleteNote } = useNotes();
+  const { notes, addNote, updateNote, deleteNote, updateReaction } = useNotes();
   const { currentPage, totalPages, paginatedItems, goToPage, resetToFirstPage } = usePagination(notes, 5);
   const { cursorMode, setCursorMode } = useCursorMode();
   const [zoom, setZoom] = useState(1);
@@ -90,19 +90,20 @@ function App() {
 
   return (
     <Layout>
-      <div className="relative w-full h-screen overflow-hidden canvas-page bg-gray-50">
+      <div className="relative w-full h-screen overflow-hidden bg-center bg-cover canvas-page bg-gray-50">
         <NotesCanvas
           notes={paginatedItems}
           zoom={zoom}
           cursorMode={cursorMode}
-          width={dimensions.width - 64} // Subtract sidebar width
+          width={dimensions.width}
           height={dimensions.height}
           onNoteEdit={handleEditNote}
           onNoteDelete={handleDeleteNote}
+          onReactionUpdate={updateReaction}
           onStageClick={handleStageClick}
         />
         {/* Pagination */}
-        <div className="absolute z-50 transform -translate-x-1/2 bottom-6 left-1/2">
+        <div className="absolute z-50 transform -translate-x-1/2 bottom-20 sm:bottom-6 left-1/2">
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
@@ -110,7 +111,7 @@ function App() {
           />
         </div>
         {/* Cursor Mode */}
-        <div className="absolute z-50 flex flex-col gap-3 right-31 top-6">
+        <div className="absolute z-50 flex flex-col gap-3 right-6 top-4 sm:right-32 sm:top-6">
           <CursorModeToggle 
             cursorMode={cursorMode}
             onModeChange={(newMode) => {
@@ -121,7 +122,7 @@ function App() {
           />
         </div>
         {/* Zoom Control */}
-        <div className="absolute z-50 right-31 bottom-24">
+        <div className="absolute z-50 right-6 bottom-50 sm:bottom-24 sm:right-32">
           <ZoomControls
             zoom={zoom}
             onZoomIn={handleZoomIn}
@@ -129,7 +130,7 @@ function App() {
           />
         </div>
         {/* Create Note */}
-        <div className="absolute z-50 flex flex-col gap-3 right-31 bottom-6">
+        <div className="absolute z-50 flex flex-col gap-3 right-6 bottom-36 sm:bottom-6 sm:right-32">
           <CreateNoteButton onClick={handleCreateNote} />
         </div>
         {/* Note Modal */}

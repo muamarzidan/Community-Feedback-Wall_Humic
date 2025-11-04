@@ -1,14 +1,17 @@
 import { useRef, useEffect, useState } from 'react';
 import { Stage, Layer } from 'react-konva';
 
+import { closeAllMenus } from '../utils/domUtils';
 import NoteCard from './NoteCard';
+import BackgroundCanvas from "../assets/images/backgorund-canvas.png";
 
 const NotesCanvas = ({ 
   notes, 
   zoom, 
   cursorMode = 'drag',
   onNoteEdit, 
-  onNoteDelete, 
+  onNoteDelete,
+  onReactionUpdate,
   onStageClick,
   width = window.innerWidth,
   height = window.innerHeight 
@@ -49,7 +52,6 @@ const NotesCanvas = ({
     stage.on('wheel', handleWheel);
     return () => stage.off('wheel', handleWheel);
   }, []);
-
   // Update zoom from external controls
   useEffect(() => {
     const stage = stageRef.current;
@@ -57,24 +59,18 @@ const NotesCanvas = ({
     
     stage.scale({ x: zoom, y: zoom });
   }, [zoom]);
-
+  
   const handleDragEnd = (e) => {
     setStagePosition(e.target.position());
   };
-
   const handleMouseDown = (e) => {
     // Check if clicking on empty space (stage background)
     if (e.target === e.target.getStage()) {
       // Close any open menus when clicking on empty space
-      const menuElement = document.querySelector('.fixed.z-50');
-      if (menuElement) {
-        document.body.removeChild(menuElement);
-      }
-      
+      closeAllMenus();
       onStageClick?.(e);
     }
   };
-  
   // Prevent stage from getting confused when menu is clicked
   const handleClick = (e) => {
     // Let the event bubble up if it's not directly on the stage
@@ -86,8 +82,12 @@ const NotesCanvas = ({
   return (
     <div 
       className="w-full h-full overflow-hidden bg-gray-50"
-      style={{ cursor: cursorMode === 'drag' ? 'grab' : 'default' }}
+      style={{ cursor: cursorMode === 'drag' ? 'grab' : 'default', backgroundImage: `url(${BackgroundCanvas})` }}
     >
+      {/* <div
+        className="absolute inset-0 bg-center bg-cover opacity-60"
+        style={{ backgroundImage: `url(${BackgroundCanvas})` }}
+      ></div> */}
       <Stage
         ref={stageRef}
         width={width}
@@ -109,6 +109,7 @@ const NotesCanvas = ({
               cursorMode={cursorMode}
               onEdit={() => onNoteEdit(note)}
               onDelete={() => onNoteDelete(note.id)}
+              onReactionUpdate={onReactionUpdate}
             />
           ))}
         </Layer>

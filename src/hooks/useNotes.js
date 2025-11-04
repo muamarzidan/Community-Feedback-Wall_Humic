@@ -53,7 +53,7 @@ export const useNotes = () => {
   };
 
   const deleteNote = (noteId) => {
-    setNotes(prev => prev.filter(note => note.id !== noteId));
+    setNotes(notes => notes.filter(note => note.id !== noteId));
   };
 
   const clearAllNotes = () => {
@@ -61,12 +61,28 @@ export const useNotes = () => {
     localStorage.removeItem(STORAGE_KEY);
   };
 
+  const updateReaction = (noteId, reactionType) => {
+    setNotes(notes => notes.map(note => {
+      if (note.id === noteId) {
+        return {
+          ...note,
+          reactions: {
+            ...note.reactions,
+            [reactionType]: (note.reactions[reactionType] || 0) + 1
+          }
+        };
+      }
+      return note;
+    }));
+  };
+
   return {
     notes,
     addNote,
     updateNote,
     deleteNote,
-    clearAllNotes
+    clearAllNotes,
+    updateReaction
   };
 };
 
@@ -80,7 +96,7 @@ const generateDefaultNotes = () => {
   ];
 
   const descriptions = [
-    'Important points from today\'s team meeting and action items to follow up.',
+    'Important points from today\'s team meeting and action items to follow up. Important points from today\'s team meeting and action items to follow up. Important points from today\'s team meeting and action items to follow up. Important points from today\'s team meeting and action items to follow up. Important points from today\'s team meeting and action items to follow up. Important points from today\'s team meeting and action items to follow up. Important points from today\'s team meeting and action items to follow up. Important points from today\'s team meeting and action items to follow up. Important points from today\'s team meeting and action items to follow up. .Important points from today\'s team meeting and action items to follow up . c',
     'Creative project ideas for the next quarter. Need to prioritize and plan.',
     'Grocery items needed for this week. Don\'t forget organic vegetables.',
     'List of books recommended by colleagues and friends to read.',
@@ -97,45 +113,109 @@ const generateDefaultNotes = () => {
     'Daily tasks and reminders to stay organized and productive.'
   ];
 
-  const colors = ['#fbbf24', '#f472b6', '#60a5fa', '#34d399', '#a78bfa', '#fb923c'];
+  const colors = ['#fef3c7', '#fecdd3', '#d9f99d', '#bfdbfe', '#ddd6fe', '#fed7aa'];
+  
+  // Sample images from unsplash
+  const images = [
+    'https://images.unsplash.com/photo-1557683316-973673baf926?w=400&h=200&fit=crop',
+    null,
+    'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&h=200&fit=crop',
+    null,
+    'https://images.unsplash.com/photo-1515378960530-7c0da6231fb1?w=400&h=200&fit=crop',
+    null,
+    'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=400&h=200&fit=crop',
+    null,
+    'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=200&fit=crop',
+    null,
+    'https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=400&h=200&fit=crop',
+    null,
+    'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=400&h=200&fit=crop',
+    null,
+    null
+  ];
+
+  const authors = [
+    'Difa rindang utari', 'Arya Jagadditha', 'Budi Santoso', 'Siti Nurhaliza',
+    'Rizky Pratama', 'Maya Anggraini', 'Andi Wijaya', 'Dewi Lestari'
+  ];
+
+  // User types: 'guest', 'you', 'people'
+  const userTypes = ['guest', 'people', 'you', 'people'];
+  const currentUserId = 'current-user-123'; // This would come from auth context
+  const currentUserName = 'Punya saya';
 
   return titles.map((title, index) => {
     const position = calculatePosition(index);
+    const dayOffset = Math.floor(Math.random() * 30); // Random days within last month
+    const createdDate = new Date(Date.now() - (dayOffset * 86400000));
+    const userType = userTypes[index % userTypes.length];
+    
+    // Determine if note has image based on user type
+    let hasImage = false;
+    let authorName = authors[index % authors.length];
+    let userId = `user-${index}`;
+    
+    if (userType === 'you') {
+      // My notes - can have images, show edit/delete buttons
+      hasImage = Math.random() > 0.3; // 70% chance of having image
+      // authorName = currentUserName;
+      userId = currentUserId;
+    } else if (userType === 'people') {
+      // Other logged in users - can have images
+      hasImage = Math.random() > 0.4; // 60% chance of having image
+    } else {
+      // Guest users - no images
+      hasImage = false;
+      authorName = authorName + ' (orang lain)';
+    }
+    
     return {
       id: Date.now() + index,
       title,
       description: descriptions[index],
+      content: descriptions[index], // For search functionality
       backgroundColor: colors[index % colors.length],
-      author: 'ARYA JAGADDITHA',
+      author: authorName,
+      userId: userId,
+      userType: userType, // 'guest', 'you', 'people'
+      image: hasImage ? images[index] : null,
+      likes: Math.floor(Math.random() * 50) + 1, // For sorting by likes
+      reactions: {
+        heart: Math.floor(Math.random() * 10) + 1,
+        thumbsUp: Math.floor(Math.random() * 10) + 1,
+        star: Math.floor(Math.random() * 10) + 1,
+        smile: Math.floor(Math.random() * 10) + 1,
+        fire: Math.floor(Math.random() * 10) + 1
+      },
       x: position.x,
       y: position.y,
-      createdAt: new Date(Date.now() - (index * 86400000)).toISOString(), // Spread over days
-      updatedAt: new Date(Date.now() - (index * 86400000)).toISOString()
+      createdAt: createdDate.toISOString(),
+      updatedAt: createdDate.toISOString()
     };
   });
 };
 
 // Calculate position for notes to avoid overlap
 const calculatePosition = (index) => {
-  const cardWidth = 200;
-  const cardHeight = 150;
-  const spacing = 50;
-  const cols = 4;
+  const cardWidth = 300; // Updated for new design
+  const cardHeight = 320; // Updated for new design
+  const spacing = 40;
+  const cols = 3; // Fewer columns due to larger cards
   
   const col = index % cols;
   const row = Math.floor(index / cols);
   
   return {
-    x: 100 + col * (cardWidth + spacing),
-    y: 100 + row * (cardHeight + spacing)
+    x: 120 + col * (cardWidth + spacing),
+    y: 80 + row * (cardHeight + spacing)
   };
 };
 
 // Find available position for new note
 const findAvailablePosition = (existingNotes) => {
-  const cardWidth = 200;
-  const cardHeight = 150;
-  const spacing = 50;
+  const cardWidth = 300;
+  const cardHeight = 320;
+  const spacing = 40;
   const minDistance = 50;
 
   // Start from a default position

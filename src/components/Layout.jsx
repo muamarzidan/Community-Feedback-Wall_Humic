@@ -4,7 +4,7 @@ import Sidebar from './Sidebar';
 
 const Layout = ({ children, showSidebar = true }) => {
   const location = useLocation();
-  
+
   // Force default cursor on non-canvas pages
   useEffect(() => {
     if (location.pathname !== '/') {
@@ -20,7 +20,14 @@ const Layout = ({ children, showSidebar = true }) => {
   return (
     <div className="flex h-screen" style={{ cursor: location.pathname !== '/' ? 'default' : '' }}>
       {showSidebar && <Sidebar />}
-      <div className={`flex-1 ${showSidebar ? 'ml-25' : ''}`} style={{ cursor: location.pathname !== '/' ? 'default' : '' }}>
+      <div 
+        className={`flex-1 ${
+          showSidebar 
+            ? 'ml-0 pt-16 sm:ml-[100px] sm:pt-0'
+            : 'ml-0'
+        }`} 
+        style={{ cursor: location.pathname !== '/' ? 'default' : '' }}
+      >
         {children}
       </div>
     </div>

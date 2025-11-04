@@ -4,6 +4,9 @@ import { FcGoogle } from "react-icons/fc";
 import { FaFacebook, FaApple } from "react-icons/fa";
 import { HiOutlineEyeOff, HiOutlineEye } from "react-icons/hi";
 
+import LoginBanner from '@/assets/images/login-banner-agora.png';
+import RegisterBanner from '@/assets/images/register-banner-agora.png';
+
 export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
     const [mode, setMode] = useState(initialMode); // 'login' or 'register'
     const [showPassword, setShowPassword] = useState(false);
@@ -36,19 +39,11 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                     <X className="w-6 h-6" />
                 </button>
 
-                {/* Logo */}
-                <div className="mb-6">
-                    <h1 className="text-3xl font-bold text-gray-800">Logo</h1>
-                </div>
-
                 {mode === 'login' ? (
-                    <>
-                        <h2 className="text-2xl font-semibold">Login</h2>
-                        <p className="mb-6 text-sm text-gray-500">
-                            Login to access your travelwise account
-                        </p>
-
-                        <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className='space-y-4'>
+                        <h2 className="text-2xl font-semibold text-center">Login</h2>
+                        <img src={LoginBanner} alt="Description" className="object-cover aspect-video rounded-2xl" />
+                        <form onSubmit={handleSubmit} className="space-y-2">
                             <div>
                                 <input
                                     type="email"
@@ -116,31 +111,16 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                                     type="button"
                                     className="flex items-center justify-center w-full gap-2 px-6 py-2 transition border border-gray-300 rounded-md hover:bg-gray-50"
                                 >
-                                    <FaFacebook className="w-5 h-5 text-blue-600" />
-                                </button>
-                                <button
-                                    type="button"
-                                    className="flex items-center justify-center w-full gap-2 px-6 py-2 transition border border-gray-300 rounded-md hover:bg-gray-50"
-                                >
                                     <FcGoogle className="w-5 h-5" />
-                                </button>
-                                <button
-                                    type="button"
-                                    className="flex items-center justify-center w-full gap-2 px-6 py-2 transition border border-gray-300 rounded-md hover:bg-gray-50"
-                                >
-                                    <FaApple className="w-5 h-5" />
                                 </button>
                             </div>
                         </form>
-                    </>
+                    </div>
                 ) : (
-                    <>
-                        <h2 className="text-2xl font-semibold">Sign up</h2>
-                        <p className="mb-6 text-sm text-gray-500">
-                            Let's get you all set up so you can access your personal account.
-                        </p>
-
-                        <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className='space-y-4'>
+                        <h2 className="pb-2 text-2xl font-semibold text-center">Sign up</h2>
+                        <img src={RegisterBanner} alt="RegisterBanner" className="object-cover aspect-video rounded-2xl" />
+                        <form onSubmit={handleSubmit} className="space-y-2">
                             <div>
                                 <input
                                     type="text"
@@ -247,23 +227,11 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                                     type="button"
                                     className="flex items-center justify-center w-full gap-2 px-6 py-2 transition border border-gray-300 rounded-md hover:bg-gray-50"
                                 >
-                                    <FaFacebook className="w-5 h-5 text-blue-600" />
-                                </button>
-                                <button
-                                    type="button"
-                                    className="flex items-center justify-center w-full gap-2 px-6 py-2 transition border border-gray-300 rounded-md hover:bg-gray-50"
-                                >
                                     <FcGoogle className="w-5 h-5" />
-                                </button>
-                                <button
-                                    type="button"
-                                    className="flex items-center justify-center w-full gap-2 px-6 py-2 transition border border-gray-300 rounded-md hover:bg-gray-50"
-                                >
-                                    <FaApple className="w-5 h-5" />
                                 </button>
                             </div>
                         </form>
-                    </>
+                    </div>
                 )}
             </div>
         </div>
