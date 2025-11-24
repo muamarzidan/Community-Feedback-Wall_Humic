@@ -98,55 +98,52 @@ export default function AboutPage() {
                                     <img 
                                         src={member.image}
                                         alt={member.alt}
-                                        className="object-cover w-full h-full max-w-17 max-h-17 sm:max-w-[570px] sm:max-h-[414px] flex-shrink-0 rounded-full sm:rounded-none"
+                                        className="object-cover w-full h-full max-w-17 max-h-17 sm:max-w-[470px] sm:max-h-[314px] xl:max-w-[570px] xl:max-h-[414px] flex-shrink-0 rounded-full sm:rounded-none"
                                     />
-
-                                    {/* Content */}
+                                    {/* Main Content */}
                                     <div className="flex-1 space-y-3 sm:space-y-5">
-                                        <div className="hidden px-4 py-2 text-xl font-medium border border-gray-200 rounded-full sm:inline-block text-800">
+                                        <div className="hidden px-4 py-2 font-medium border border-gray-200 rounded-full sm:text-lg xl:text-xl sm:inline-block text-800">
                                             {member.role}
                                         </div>
                                         <div className="flex flex-col gap-2">
                                             <div className="flex items-center justify-between">
-                                                <h2 className="text-sm font-bold text-black sm:text-4xl">
+                                                <h2 className="text-sm font-bold text-black sm:text-2xl xl:text-4xl">
                                                     {member.name}
                                                 </h2>
-                                                <div className="inline-block px-4 py-2 text-[10px] font-medium border border-gray-200 rounded-full sm:text-xl sm:hidden text-800">
+                                                <div className="inline-block px-4 py-2 text-[10px] font-medium border border-gray-200 rounded-full sm:text-lg xl:text-xl sm:hidden text-800">
                                                     {member.role}
                                                 </div>
                                             </div>
-                                            <p className="text-sm text-gray-900 sm:text-2xl">
+                                            <p className="text-sm text-gray-900 sm:text-lg xl:text-2xl">
                                                 {member.description}
                                             </p>
                                         </div>
-
                                         {/* Tools */}
                                         <div className="space-y-3">
-                                            <div className="text-sm font-bold text-black sm:text-2xl">Tools:</div>
+                                            <div className="text-sm font-bold text-black sm:text-lg xl:text-2xl">Tools:</div>
                                             <div className="flex flex-wrap gap-2">
                                                 {member.tools.map((tool, idx) => (
                                                     <span 
                                                         key={idx}
-                                                        className="flex items-center gap-2 px-4 py-2 text-xs text-black bg-gray-100 border border-gray-200 rounded-full sm:text-base"
+                                                        className="flex items-center gap-2 px-3 py-2 text-xs text-black bg-gray-100 border border-gray-200 rounded-full xl:px-4 sm:text-sm xl:text-base"
                                                     >
                                                         <img
                                                             src={FigmaIcon}
                                                             alt="Tools Figma - Agora"
-                                                            className="object-contain w-4 h-4 sm:h-5 sm:w-5"
+                                                            className="object-contain w-4 h-4 xl:h-5 xl:w-5"
                                                         />
                                                         {tool}
                                                     </span>
                                                 ))}
                                             </div>
                                         </div>
-
                                         {/* Action Buttons */}
                                         <div className="flex gap-3 pt-2">
-                                            <button className="flex items-center justify-center w-full gap-2 px-6 py-3 text-xs text-white transition-all rounded-full shadow-sm cursor-pointer sm:w-fit sm:text-xl bg-primary-500 hover:bg-primary-700">
+                                            <button className="flex items-center justify-center w-full gap-2 px-3 py-3 text-xs text-white transition-all rounded-full shadow-sm cursor-pointer sm:px-4 xl:px-6 sm:w-fit sm:text-base xl:text-xl bg-primary-500 hover:bg-primary-700">
                                                 <UserPlus className="w-5 h-5" />
                                                 Connect
                                             </button>
-                                            <button className="flex items-center justify-center w-full gap-2 px-6 py-3 text-xs transition-all rounded-full cursor-pointer sm:w-fit sm:text-xl text-primary-500 bg-primary-50 hover:bg-primary-100">
+                                            <button className="flex items-center justify-center w-full gap-2 px-3 text-xs transition-all rounded-full cursor-pointer sm:px-4 xl:px-6 sm:w-fit sm:text-base xl:text-xl text-primary-500 bg-primary-50 hover:bg-primary-100">
                                                 <Mail className="w-5 h-5" />
                                                 Email
                                             </button>
@@ -165,4 +162,4 @@ export default function AboutPage() {
             </div>
         </Layout>
     );
-}
+};
