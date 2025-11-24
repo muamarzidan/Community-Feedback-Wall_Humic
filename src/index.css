@@ -78,3 +78,24 @@ html, body {
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
+
+
+/* Responsive reposition preset panel to bottom */
+@media (max-width: 768px) {
+    .rdrDateRangePickerWrapper {
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    .rdrDefinedRangesWrapper {
+        order: 2; /* move presets below calendar */
+        width: 100% !important;
+        border-right: none !important;
+        border-top: 1px solid #e5e7eb; /* soft separator */
+    }
+
+    .rdrCalendarWrapper {
+        order: 1;
+        width: 100% !important;
+    }
+}

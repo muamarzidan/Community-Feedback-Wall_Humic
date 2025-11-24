@@ -88,7 +88,7 @@ export const useListNotes = () => {
       likes: Object.values(apiNote.reactions || {}).reduce((sum, val) => sum + val, 0), // Total reactions
       reactions: {
         heart: apiNote.reactions?.heart || 0,
-        thumbsUp: apiNote.reactions?.like || 0,
+        like: apiNote.reactions?.like || 0,
         laugh: apiNote.reactions?.laugh || 0,
         surprised: apiNote.reactions?.surprised || 0,
         fire: apiNote.reactions?.fire || 0,

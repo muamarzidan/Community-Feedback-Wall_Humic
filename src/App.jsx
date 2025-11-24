@@ -174,7 +174,7 @@ function App() {
           />
         </div>
         {/* Create Note */}
-        <div className="absolute z-50 flex flex-col gap-3 right-6 bottom-36 sm:bottom-6 sm:right-32">
+        <div className="absolute z-50 flex flex-col gap-3 right-7 bottom-36 sm:bottom-6 sm:right-32">
           <CreateNoteButton onClick={handleCreateNote} />
         </div>
         </div>

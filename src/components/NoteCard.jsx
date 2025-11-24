@@ -53,7 +53,7 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, cu
   const currentUserId = parsedUserData ? parsedUserData?.id : null;
   const reactions = [
     { emoji: '❤️', type: 'heart', x: 0 },
-    { emoji: '👍', type: 'thumbsUp', x: 66 },
+    { emoji: '👍', type: 'like', x: 66 },
     { emoji: '😂', type: 'laugh', x: 133 },
     { emoji: '😮', type: 'surprised', x: 200 },
     { emoji: '🔥', type: 'fire', x: 267 }

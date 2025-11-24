@@ -79,7 +79,7 @@ export const useNotes = () => {
       image: apiNote.image || null,
       reactions: {
         heart: apiNote.reactions?.heart || 0,
-        thumbsUp: apiNote.reactions?.like || 0,
+        like: apiNote.reactions?.like || 0,
         laugh: apiNote.reactions?.laugh || 0,
         surprised: apiNote.reactions?.surprised || 0,
         fire: apiNote.reactions?.fire || 0,
@@ -182,7 +182,7 @@ export const useNotes = () => {
       // Map frontend reaction types to API reaction types
       const reactionMap = {
         heart: 'heart',
-        thumbsUp: 'like',
+        like: 'like',
         laugh: 'laugh',
         surprised: 'surprised',
         fire: 'fire',
@@ -199,7 +199,7 @@ export const useNotes = () => {
               ...note,
               reactions: {
                 heart: response.data.data.reactions.heart || 0,
-                thumbsUp: response.data.data.reactions.like || 0,
+                like: response.data.data.reactions.like || 0,
                 laugh: response.data.data.reactions.laugh || 0,
                 surprised: response.data.data.reactions.surprised || 0,
                 fire: response.data.data.reactions.fire || 0,
