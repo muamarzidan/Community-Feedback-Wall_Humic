@@ -161,13 +161,12 @@ export default function SignUpPage() {
                                 className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
                             >
                                 {showConfirmPassword ? (
-                                    <HiOutlineEye className="w-5 h-5" />
-                                ) : (
-                                    <HiOutlineEyeOff className="w-5 h-5" />
+                                    <HiOutlineEye className="w-5 h-5 !cursor-pointer" />
+                                ) : (   
+                                    <HiOutlineEyeOff className="w-5 h-5 !cursor-pointer" />
                                 )}
                             </button>
                         </div>
-
                         <div className="flex items-start gap-2 text-sm text-gray-600">
                             <input type="checkbox" className="mt-1 cursor-pointer accent-primary-500" required />
                             <p>
@@ -181,7 +180,6 @@ export default function SignUpPage() {
                                 </a>
                             </p>
                         </div>
-
                         <button
                             type="submit"
                             className="w-full py-2 text-white transition-colors rounded-lg cursor-pointer bg-primary-500 hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
@@ -189,24 +187,20 @@ export default function SignUpPage() {
                         >
                             {loading ? 'Creating...' : 'Create account'}
                         </button>
-
                         <p className="text-sm text-center text-gray-600">
                             Already have an account?{" "}
-                            <Link to="/login" className="font-medium text-red-500 hover:text-red-600">
+                            <Link to="/login" className="font-medium text-red-500 hover:text-red-600 !cursor-pointer">
                                 Login
                             </Link>
                         </p>
-
                         <div className="flex items-center my-4">
                             <hr className="flex-grow border-gray-300" />
                             <span className="px-2 text-sm text-gray-400">Or Sign up with</span>
                             <hr className="flex-grow border-gray-300" />
                         </div>
-
-                        <button type="button" className="flex items-center justify-center w-full gap-2 px-6 py-2 transition-colors border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-100">
+                        <button type="button" className="flex items-center justify-center w-full gap-2 px-6 py-2 transition-colors border border-gray-300 rounded-lg !cursor-pointer hover:bg-gray-100">
                             <FcGoogle className="w-5 h-5" />
                         </button>
-
                         <Link to="/" className='flex items-center justify-center gap-2'>
                             <IoArrowBack className='w-4 h-4 text-gray-600'/>         
                             <p className='text-sm text-gray-600'>Back to home</p>
@@ -216,4 +210,4 @@ export default function SignUpPage() {
             </div>
         </div>
     );
-}
+};

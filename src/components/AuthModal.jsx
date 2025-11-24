@@ -50,6 +50,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
 
                 if (result.success) {
                     onClose();
+                    window.location.reload();
                 } else {
                     setError(result.message);
                 };
@@ -72,7 +73,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                 } else {
                     setError(result.message);
                 };
-            }
+            };
         } catch (err) {
             setError('Terjadi kesalahan. Silakan coba lagi.');
         } finally {
@@ -111,13 +112,11 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                     <div className='space-y-4'>
                         <h2 className="text-2xl font-semibold text-center">Login</h2>
                         <img src={LoginBanner} alt="Description" className="object-cover aspect-video rounded-2xl" />
-                        
                         {error && (
                             <div className="p-3 text-sm text-red-600 bg-red-100 border border-red-200 rounded-lg">
                                 {error}
                             </div>
                         )}
-
                         <form onSubmit={handleSubmit} className="space-y-2">
                             <div>
                                 <input
@@ -146,13 +145,12 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                                     className="absolute text-gray-400 transition-colors right-3 top-2.5 hover:text-gray-600"
                                 >
                                     {showPassword ? (
-                                        <HiOutlineEye className="w-5 h-5" />
+                                        <HiOutlineEye className="w-5 h-5 !cursor-pointer" />
                                     ) : (
-                                        <HiOutlineEyeOff className="w-5 h-5" />
+                                        <HiOutlineEyeOff className="w-5 h-5 !cursor-pointer" />
                                     )}
                                 </button>
                             </div>
-
                             <div className="flex items-center justify-between text-sm">
                                 <label className="flex items-center gap-2 text-gray-600">
                                     <input 
@@ -164,40 +162,36 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                                     />
                                     Remember me
                                 </label>
-                                <a href="#" className="text-red-400 hover:text-red-500">
+                                <a href="#" className="text-red-400 hover:text-red-500 !cursor-pointer">
                                     Forgot Password
                                 </a>
                             </div>
-
                             <button
                                 type="submit"
-                                className="w-full py-2 text-white transition bg-indigo-500 rounded-md hover:bg-indigo-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                className="w-full py-2 mt-4 text-white transition bg-indigo-500 rounded-md hover:bg-indigo-600 disabled:bg-gray-400 disabled:cursor-not-allowed !cursor-pointer"
                                 disabled={loading}
                             >
                                 {loading ? 'Loading...' : 'Login'}
                             </button>
-
                             <p className="text-sm text-center text-gray-600">
                                 Don't have an account?{" "}
                                 <button
                                     type="button"
                                     onClick={() => switchMode('register')}
-                                    className="font-medium text-red-500 cursor-pointer hover:text-red-600"
+                                    className="font-medium text-red-500 hover:text-red-600 !cursor-pointer"
                                 >
                                     Sign up
                                 </button>
                             </p>
-
                             <div className="flex items-center my-4">
                                 <hr className="flex-grow border-gray-300" />
                                 <span className="px-2 text-sm text-gray-400">Or login with</span>
                                 <hr className="flex-grow border-gray-300" />
                             </div>
-
                             <div className="flex justify-center w-full gap-4">
                                 <button
                                     type="button"
-                                    className="flex items-center justify-center w-full gap-2 px-6 py-2 transition border border-gray-300 rounded-md hover:bg-gray-50"
+                                    className="flex items-center justify-center w-full gap-2 px-6 py-2 transition border border-gray-300 rounded-md hover:bg-gray-50 !cursor-pointer"
                                 >
                                     <FcGoogle className="w-5 h-5" />
                                 </button>
@@ -252,9 +246,9 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                                     className="absolute text-gray-400 transition-colors right-3 top-2.5 hover:text-gray-600"
                                 >
                                     {showPassword ? (
-                                        <HiOutlineEye className="w-5 h-5" />
+                                        <HiOutlineEye className="w-5 h-5 !cursor-pointer" />
                                     ) : (
-                                        <HiOutlineEyeOff className="w-5 h-5" />
+                                        <HiOutlineEyeOff className="w-5 h-5 !cursor-pointer" />
                                     )}
                                 </button>
                             </div>
@@ -274,9 +268,9 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                                     className="absolute text-gray-400 transition-colors right-3 top-2.5 hover:text-gray-600"
                                 >
                                     {showConfirmPassword ? (
-                                        <HiOutlineEye className="w-5 h-5" />
+                                        <HiOutlineEye className="w-5 h-5 !cursor-pointer" />
                                     ) : (
-                                        <HiOutlineEyeOff className="w-5 h-5" />
+                                        <HiOutlineEyeOff className="w-5 h-5 !cursor-pointer" />
                                     )}
                                 </button>
                             </div>
@@ -295,7 +289,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                             </div>
                             <button
                                 type="submit"
-                                className="w-full py-2 text-white transition bg-indigo-500 rounded-md hover:bg-indigo-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                className="w-full py-2 mt-4 text-white transition bg-indigo-500 rounded-md hover:bg-indigo-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
                                 disabled={loading}
                             >
                                 {loading ? 'Creating...' : 'Create account'}
@@ -305,7 +299,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                                 <button
                                     type="button"
                                     onClick={() => switchMode('login')}
-                                    className="font-medium text-red-500 cursor-pointer hover:text-red-600"
+                                    className="font-medium text-red-500 !cursor-pointer hover:text-red-600"
                                 >
                                     Login
                                 </button>
@@ -318,7 +312,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                             <div className="flex justify-center w-full gap-4">
                                 <button
                                     type="button"
-                                    className="flex items-center justify-center w-full gap-2 px-6 py-2 transition border border-gray-300 rounded-md hover:bg-gray-50"
+                                    className="flex items-center justify-center w-full gap-2 px-6 py-2 transition border border-gray-300 rounded-md hover:bg-gray-50 !cursor-pointer"
                                 >
                                     <FcGoogle className="w-5 h-5" />
                                 </button>

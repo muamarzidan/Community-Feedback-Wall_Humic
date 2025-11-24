@@ -154,11 +154,14 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, cu
     return note.author;
   };
   const findNotesUserIdToLocalStorage = (userId) => {
+    if (!userId || !currentUserId) return false;
     if (userId === currentUserId) {
       return true;
     };
+
     return false;
   };
+
 
   let currentY = padding;
 
@@ -185,11 +188,11 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, cu
           text={`${replaceUserTypeNames(note)} ${getUserTypeDisplay()}`}
           fontSize={16}
           fill="#757575"
-          width={findNotesUserIdToLocalStorage(note.userId) ? 162 : 162}
+          width={findNotesUserIdToLocalStorage(note?.userId) ? 162 : 162}
           ellipsis={true}
         />
         {/* Date for other people's notes (next to name) */}
-        {!findNotesUserIdToLocalStorage(note.userId) && (
+        {!findNotesUserIdToLocalStorage(note?.userId) && (
           <Text
             x={cardWidth - 85}
             y={currentY}
@@ -200,7 +203,7 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, cu
           />
         )}
         {/* Edit & Delete buttons for own notes */}
-        {findNotesUserIdToLocalStorage(note.userId) && (
+        {findNotesUserIdToLocalStorage(note?.userId) && (
           <Group>
             {/* Edit Button */}
             <Rect
@@ -372,7 +375,7 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, cu
         );
       })()}
       {/* Date for own notes (below reactions) */}
-      {findNotesUserIdToLocalStorage(note.userId) && (() => {
+      {findNotesUserIdToLocalStorage(note?.userId) && (() => {
         currentY += 26 + 4; // Reaction height + small gap
         return (
           <Text

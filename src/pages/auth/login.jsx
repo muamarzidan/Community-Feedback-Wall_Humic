@@ -20,6 +20,7 @@ export default function LoginPage() {
         remember_me: false
     });
 
+    
     // Reset cursor to default on auth pages
     useEffect(() => {
         document.body.style.cursor = 'default';
@@ -36,7 +37,6 @@ export default function LoginPage() {
         });
         setError('');
     };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
@@ -66,13 +66,12 @@ export default function LoginPage() {
                     <p className="mb-6 text-sm text-gray-500">
                         Login to access your travelwise account
                     </p>
-                    
                     {error && (
                         <div className="p-3 mb-4 text-sm text-red-600 bg-red-100 border border-red-200 rounded-lg">
                             {error}
                         </div>
                     )}
-
+                    {/* Main Content */}
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
                             <input
@@ -101,13 +100,12 @@ export default function LoginPage() {
                                 className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
                             >
                                 {showPassword ? (
-                                    <HiOutlineEye className="w-5 h-5" />
+                                    <HiOutlineEye className="w-5 h-5 !cursor-pointer" />
                                 ) : (
-                                    <HiOutlineEyeOff className="w-5 h-5" />
+                                    <HiOutlineEyeOff className="w-5 h-5 !cursor-pointer" />
                                 )}
                             </button>
                         </div>
-
                         <div className="flex items-center justify-between text-sm">
                             <label className="flex items-center gap-2 text-gray-600">
                                 <input 
@@ -123,32 +121,27 @@ export default function LoginPage() {
                                 Forgot Password
                             </a>
                         </div>
-
                         <button
                             type="submit"
-                            className="w-full py-2 text-white transition bg-indigo-500 rounded-md hover:bg-indigo-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                            className="!cursor-pointer w-full py-2 text-white transition bg-indigo-500 rounded-md hover:bg-indigo-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
                             disabled={loading}
                         >
                             {loading ? 'Loading...' : 'Login'}
                         </button>
-
                         <p className="text-sm text-center text-gray-600">
                             Don't have an account?{" "}
-                            <Link to="/register" className="font-medium text-red-500 hover:text-red-600">
+                            <Link to="/register" className="font-medium text-red-500 hover:text-red-600 !cursor-pointer">
                                 Sign up
                             </Link>
                         </p>
-
                         <div className="flex items-center my-4">
                             <hr className="flex-grow border-gray-300" />
                             <span className="px-2 text-sm text-gray-400">Or login with</span>
                             <hr className="flex-grow border-gray-300" />
                         </div>
-
-                        <button type="button" className="flex items-center justify-center w-full gap-2 px-6 py-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                        <button type="button" className="flex items-center justify-center w-full gap-2 px-6 py-2 border border-gray-300 rounded-lg !cursor-pointer hover:bg-gray-50">
                             <FcGoogle className="w-5 h-5" />
                         </button>
-
                         <Link to="/" className='flex items-center justify-center gap-2'>
                             <IoArrowBack className='w-4 h-4 text-gray-600'/>         
                             <p className='text-sm text-gray-600'>Back to home</p>
@@ -166,4 +159,4 @@ export default function LoginPage() {
             </div>
         </div>
     );
-}
+};
