@@ -4,16 +4,16 @@ class ErrorBoundary extends Component {
   constructor(props) {
     super(props);
     this.state = { hasError: false };
-  }
+  };
 
   static getDerivedStateFromError(error) {
     return { hasError: true };
-  }
+  };
 
   componentDidCatch(error, errorInfo) {
     console.warn('Error caught by boundary:', error);
     console.warn('Error info:', errorInfo);
-  }
+  };
 
   render() {
     if (this.state.hasError) {
@@ -35,6 +35,6 @@ class ErrorBoundary extends Component {
 
     return this.props.children;
   }
-}
+};
 
 export default ErrorBoundary;

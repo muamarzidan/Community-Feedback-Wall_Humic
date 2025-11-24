@@ -1,19 +1,21 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, List, LogIn, Info, Menu, X } from 'lucide-react';
+import { LogIn, Menu, X } from 'lucide-react';
 
 import { useCursorMode } from '../contexts/CursorModeContext';
+import { useAuth } from '../contexts/AuthContext';
 import HomeIcon from '@/assets/icons/home-agora.png';
 import ListIcon from '../assets/icons/listnote-agora.png';
 import AboutIcon from '../assets/icons/about-agora.png';
 import AuthModal from './AuthModal';
 
+
 const Sidebar = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const { setCursorMode } = useCursorMode();
+    const { user, isAuthenticated, logout } = useAuth();
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
     
@@ -113,7 +115,9 @@ const Sidebar = () => {
                         className="flex items-center justify-center w-12 h-12 text-white transition-colors rounded-full cursor-pointer bg-primary-500 hover:bg-primary-600"
                         title="User Profile"
                     >
-                        <span className="text-xs font-bold text-white">DR</span>
+                        <span className="text-xs font-bold text-white">
+                            {user?.name?.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'U'}
+                        </span>
                     </Link>
                 )}
             </div>
@@ -136,7 +140,6 @@ const Sidebar = () => {
                     <Menu className="w-6 h-6" />
                 </button>
             </div>
-
             {/* Mobile Sidebar Overlay */}
             {isMobileMenuOpen && (
                 <div 
@@ -182,16 +185,29 @@ const Sidebar = () => {
                             <div className="my-4 border-t border-gray-200"></div>
                             {/* Profile Section */}
                             <div className="space-y-2">
-                                <button
-                                    onClick={() => navigate('/profile')}
-                                    className="flex items-center w-full gap-4 p-4 text-left text-gray-700 transition-colors rounded-lg cursor-pointer hover:bg-gray-100"
-                                >
-                                    <div className="flex items-center justify-center w-6 h-6 text-xs font-bold text-white rounded-full bg-primary-500">
-                                        <span>DF</span>
-                                    </div>
-                                    <span className="font-medium">Profile</span>
-                                </button>
-                                {!isAuthenticated && (
+                                {isAuthenticated ? (
+                                    <>
+                                        <button
+                                            onClick={() => navigate('/profile')}
+                                            className="flex items-center w-full gap-4 p-4 text-left text-gray-700 transition-colors rounded-lg cursor-pointer hover:bg-gray-100"
+                                        >
+                                            <div className="flex items-center justify-center w-6 h-6 text-xs font-bold text-white rounded-full bg-primary-500">
+                                                <span>{user?.name?.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'U'}</span>
+                                            </div>
+                                            <span className="font-medium">Profile</span>
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setIsMobileMenuOpen(false);
+                                                logout();
+                                            }}
+                                            className="flex items-center w-full gap-4 p-4 text-left text-red-600 transition-colors rounded-lg cursor-pointer hover:bg-red-100"
+                                        >
+                                            <LogIn className="w-6 h-6 rotate-180" />
+                                            <span className="font-medium">Logout</span>
+                                        </button>
+                                    </>
+                                ) : (
                                     <button
                                         onClick={handleGuestClick}
                                         className="flex items-center w-full gap-4 p-4 text-left text-gray-700 transition-colors rounded-lg cursor-pointer hover:bg-gray-100"
@@ -200,13 +216,6 @@ const Sidebar = () => {
                                         <span className="font-medium">Login</span>
                                     </button>
                                 )}
-                                <button
-                                    onClick={() => setIsMobileMenuOpen(false)}
-                                    className="flex items-center w-full gap-4 p-4 text-left text-red-600 transition-colors rounded-lg cursor-pointer hover:bg-red-100"
-                                >
-                                    <LogIn className="w-6 h-6 rotate-180" />
-                                    <span className="font-medium">Logout</span>
-                                </button>
                             </div>
                         </div>
                     </div>

@@ -1,18 +1,18 @@
 import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 
+
 const CursorModeContext = createContext();
 
 export const useCursorMode = () => {
   const context = useContext(CursorModeContext);
   if (!context) {
     throw new Error('useCursorMode must be used within a CursorModeProvider');
-  }
+  };
   return context;
 };
 
 export const CursorModeProvider = ({ children }) => {
-  // Get initial cursor mode from localStorage or default to 'drag'
   const getInitialMode = () => {
     const savedMode = localStorage.getItem('cursorMode');
     return savedMode || 'drag';

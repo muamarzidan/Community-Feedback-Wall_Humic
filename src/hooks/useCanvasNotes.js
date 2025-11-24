@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
 
 import { getCurrentUser } from '../utils/getCurrentUser.js';
-import { notesAPI } from '../services/api';
+import { canvasNotesAPI } from '../services/api';
+
 
 const GUEST_STORAGE_KEY = 'guest-note-timestamp';
+const CANVAS_ID = 1;
 
-export const useNotes = () => {
+export const useCanvasNotes = () => {
   const [notes, setNotes] = useState([]);
+  const [canvasInfo, setCanvasInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -25,7 +28,6 @@ export const useNotes = () => {
     return daysDiff >= 1;
   };
 
-  // Load notes from API on mount
   useEffect(() => {
     fetchNotes();
   }, []);
@@ -34,38 +36,57 @@ export const useNotes = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await notesAPI.getAllNotes();
-      
+
+      const response = await canvasNotesAPI.getCanvasNotes(CANVAS_ID);
       if (response.data && response.data.data) {
-        // Transform API data to match frontend format
-        const transformedNotes = response.data.data.map((note, index) => 
+        const apiNotes = response.data.data.notes || [];
+        const canvasCount = response.data.data.canvas_count || response.data.data.canvases?.[0]?.current_count;
+        const grid = response.data.data.grid;
+        
+        setCanvasInfo({
+          canvasId: CANVAS_ID,
+          canvasCount: canvasCount,
+          grid: grid
+        });
+        
+        // Transform API data dengan grid positioning
+        const transformedNotes = apiNotes.map((note, index) => 
           transformNoteFromAPI(note, index)
         );
         setNotes(transformedNotes);
-      };
+      }
     } catch (err) {
-      console.error('Error fetching notes:', err);
+      console.error('Error fetching canvas notes:', err);
       setError(err.message || 'Failed to fetch notes');
       setNotes([]);
     } finally {
       setLoading(false);
     };
   };
-  // Transform API note to frontend format
-  const transformNoteFromAPI = (apiNote, index) => {
+  const transformNoteFromAPI = (apiNote, index = 0) => {
     const currentUser = getCurrentUser();
-    const position = calculatePosition(index, notes.length);
     
     // Determine user type
-    let userType = 'people'; // Default for other users
+    let userType = 'guest';
+    let authorName = 'Guest';
+    
     if (apiNote.user) {
+      authorName = apiNote.user.name;
       if (currentUser && apiNote.user.id === currentUser.id) {
         userType = 'you';
+      } else {
+        userType = 'people';
       };
-    } else {
-      // No user means it's a guest note
+    } else if (apiNote.guest) {
       userType = 'guest';
+      authorName = 'Guest';
     };
+
+    // Convert grid position to pixel coordinates
+    // If grid_position exists, use it. Otherwise, calculate from index
+    const position = apiNote.grid_position 
+      ? gridToPixelPosition(apiNote.grid_position)
+      : calculatePositionFromIndex(index);
 
     return {
       id: apiNote.id,
@@ -73,8 +94,8 @@ export const useNotes = () => {
       description: apiNote.description,
       content: apiNote.description,
       backgroundColor: apiNote.color ? `#${apiNote.color}` : '#fef3c7',
-      author: apiNote.user ? apiNote.user.name : 'Guest',
-      userId: apiNote.user ? apiNote.user.id : null,
+      author: authorName,
+      userId: apiNote.user?.id || null,
       userType: userType,
       image: apiNote.image || null,
       reactions: {
@@ -85,50 +106,92 @@ export const useNotes = () => {
         fire: apiNote.reactions?.fire || 0,
       },
       userReactions: apiNote.user_reactions || [],
+      gridPosition: apiNote.grid_position || null,
       x: position.x,
       y: position.y,
       createdAt: apiNote.created_at,
       updatedAt: apiNote.updated_at,
     };
   };
+  // Convert grid position (row, col) to pixel coordinates
+  const gridToPixelPosition = (gridPos) => {
+    const cardWidth = 355; // Base width
+    const cardHeight = 180; // Base height
+    const spacing = 40;
+    const startX = 120;
+    const startY = 80;
+    
+    return {
+      x: startX + (gridPos.col * (cardWidth + spacing)),
+      y: startY + (gridPos.row * (cardHeight + spacing)),
+    };
+  };
+  // Fallback: Calculate position from index when grid_position not available
+  const calculatePositionFromIndex = (index) => {
+    const cardWidth = 355;
+    const cardHeight = 200;
+    const spacing = 40;
+    const cols = 4; // Default 4 columns
+    const startX = 120;
+    const startY = 80;
+    
+    const col = index % cols;
+    const row = Math.floor(index / cols);
+    
+    return {
+      x: startX + (col * (cardWidth + spacing)),
+      y: startY + (row * (cardHeight + spacing)),
+    };
+  };
   const addNote = async (noteData) => {
     try {
-      // Check if guest and can create note
-      if (!isAuthenticated() && !canGuestCreateNote()) {
-        throw new Error('Guest can only create 1 note per day');
+      // Check guest limitations
+      if (!isAuthenticated()) {
+        if (!canGuestCreateNote()) {
+          throw new Error('Guest can only create 1 note per day');
+        };
+        // Email wajib untuk guest
+        if (!noteData.email) {
+          throw new Error('Email is required for guest users');
+        };
+        // Guest tidak bisa upload image
+        if (noteData.image) {
+          throw new Error('Guest users cannot upload images');
+        };
       };
 
-      // Prepare data for API
       const apiData = {
         title: noteData.title,
         description: noteData.description,
         color: noteData.backgroundColor?.replace('#', '') || 'fef3c7',
       };
 
-      // Only add image if user is authenticated
+      // Add email for guest
+      if (!isAuthenticated() && noteData.email) {
+        apiData.email = noteData.email;
+      };
+      // Add image for authenticated users only
       if (isAuthenticated() && noteData.image) {
         apiData.image = noteData.image;
       };
 
-      const response = await notesAPI.createNote(apiData);
-      if (response.data && response.data.data) {
-        // Update guest timestamp if not authenticated
+      const response = await canvasNotesAPI.createNote(apiData);
+      if (response.data) {
+        // Update guest timestamp
         if (!isAuthenticated()) {
           localStorage.setItem(GUEST_STORAGE_KEY, Date.now().toString());
         };
 
-        // Refresh notes list
         await fetchNotes();
         return response.data.data;
       };
     } catch (err) {
       console.error('Error creating note:', err);
       throw err;
-    };
+    }
   };
   const updateNote = async (noteId, noteData) => {
     try {
-      // Only authenticated users can edit
       if (!isAuthenticated()) {
         throw new Error('Only logged in users can edit notes');
       };
@@ -139,7 +202,6 @@ export const useNotes = () => {
         color: noteData.backgroundColor?.replace('#', '') || 'fef3c7',
       };
 
-      // Handle image update
       if (noteData.image instanceof File) {
         apiData.image = noteData.image;
       };
@@ -147,7 +209,7 @@ export const useNotes = () => {
         apiData.delete_image = noteData.delete_image;
       };
 
-      const response = await notesAPI.updateNote(noteId, apiData);
+      const response = await canvasNotesAPI.updateNote(noteId, apiData);
       if (response.data) {
         await fetchNotes();
         return response.data.data;
@@ -155,17 +217,15 @@ export const useNotes = () => {
     } catch (err) {
       console.error('Error updating note:', err);
       throw err;
-    };
+    }
   };
   const deleteNote = async (noteId) => {
     try {
-      // Only authenticated users can delete
       if (!isAuthenticated()) {
         throw new Error('Only logged in users can delete notes');
       };
 
-      await notesAPI.deleteNote(noteId);
-      
+      await canvasNotesAPI.deleteNote(noteId);
       await fetchNotes();
     } catch (err) {
       console.error('Error deleting note:', err);
@@ -174,12 +234,10 @@ export const useNotes = () => {
   };
   const updateReaction = async (noteId, reactionType) => {
     try {
-      // Only authenticated users can react
       if (!isAuthenticated()) {
-        throw new Error('Only logged in users can react to notes');
+        throw new Error('Please login to react to notes');
       };
 
-      // Map frontend reaction types to API reaction types
       const reactionMap = {
         heart: 'heart',
         thumbsUp: 'like',
@@ -189,10 +247,9 @@ export const useNotes = () => {
       };
 
       const apiReactionType = reactionMap[reactionType];
-      const response = await notesAPI.toggleReaction(noteId, apiReactionType);
-      
+      const response = await canvasNotesAPI.toggleReaction(noteId, apiReactionType);
       if (response.data && response.data.data) {
-        // Update local state optimistically
+        // Update local state
         setNotes(prevNotes => prevNotes.map(note => {
           if (note.id === noteId) {
             return {
@@ -209,14 +266,16 @@ export const useNotes = () => {
           }
           return note;
         }));
-      };
+      }
     } catch (err) {
       console.error('Error updating reaction:', err);
+      throw err;
     };
   };
 
   return {
     notes,
+    canvasInfo,
     loading,
     error,
     addNote,
@@ -226,20 +285,5 @@ export const useNotes = () => {
     refreshNotes: fetchNotes,
     canGuestCreateNote,
     isAuthenticated,
-  };
-};
-
-const calculatePosition = (index, totalNotes) => {
-  const cardWidth = 355;
-  const cardHeight = 180;
-  const spacing = 40;
-  const cols = 4;
-  
-  const col = index % cols;
-  const row = Math.floor(index / cols);
-  
-  return {
-    x: 120 + col * (cardWidth + spacing),
-    y: 80 + row * (cardHeight + spacing),
   };
 };

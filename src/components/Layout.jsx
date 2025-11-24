@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+
 import Sidebar from './Sidebar';
+
 
 const Layout = ({ children, showSidebar = true }) => {
   const location = useLocation();
@@ -9,11 +11,12 @@ const Layout = ({ children, showSidebar = true }) => {
   useEffect(() => {
     if (location.pathname !== '/') {
       document.body.style.cursor = 'default';
-    }
+    };
+    
     return () => {
       if (location.pathname !== '/') {
         document.body.style.cursor = '';
-      }
+      };
     };
   }, [location.pathname]);
 

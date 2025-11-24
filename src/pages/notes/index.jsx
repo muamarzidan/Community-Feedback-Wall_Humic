@@ -5,14 +5,13 @@ import { format } from 'date-fns';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
 
-import { useNotes } from '../../hooks/useNotes';
+import { useListNotes } from '../../hooks/useListNotes';
 import Layout from '../../components/Layout';
 
 export default function NotesListPage() {
-  const { notes } = useNotes();
+  const { notes, loading, pagination, fetchNotes } = useListNotes();
   const [searchQuery, setSearchQuery] = useState('');
   const [currentFilter, setCurrentFilter] = useState('newest');
-  const [currentPage, setCurrentPage] = useState(1);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [dateRange, setDateRange] = useState([
     {
@@ -21,8 +20,32 @@ export default function NotesListPage() {
       key: 'selection'
     }
   ]);
-  const itemsPerPage = 9;
+  const itemsPerPage = 50;
   const datePickerRef = useRef(null);
+
+  // Fetch notes when filter or date range changes
+  useEffect(() => {
+    const params = {
+      filter: currentFilter === 'toplike' ? 'top_like' : 'newest',
+      page: pagination?.current_page || 1,
+      per_page: itemsPerPage,
+      from_date: format(dateRange[0].startDate, 'yyyy-MM-dd'),
+      to_date: format(dateRange[0].endDate, 'yyyy-MM-dd')
+    };
+    fetchNotes(params);
+  }, [currentFilter, dateRange]);
+
+  // Fetch notes when filter or date range changes
+  useEffect(() => {
+    const params = {
+      filter: currentFilter === 'toplike' ? 'top_like' : 'newest',
+      page: pagination?.current_page || 1,
+      per_page: itemsPerPage,
+      from_date: format(dateRange[0].startDate, 'yyyy-MM-dd'),
+      to_date: format(dateRange[0].endDate, 'yyyy-MM-dd')
+    };
+    fetchNotes(params);
+  }, [currentFilter, dateRange]);
 
   // Close date picker when clicking outside
   useEffect(() => {
@@ -41,43 +64,33 @@ export default function NotesListPage() {
     };
   }, [showDatePicker]);
 
-  // Filter and sort notes
-  const filteredNotes = notes
-    .filter(note => {
-      // Search filter
-      const matchesSearch = note.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        note.content?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        note.description?.toLowerCase().includes(searchQuery.toLowerCase());
-      
-      // Date range filter
-      const noteDate = new Date(note.createdAt);
-      const matchesDate = noteDate >= dateRange[0].startDate && noteDate <= dateRange[0].endDate;
-      
-      return matchesSearch && matchesDate;
-    })
-    .sort((a, b) => {
-      if (currentFilter === 'newest') {
-        return new Date(b.createdAt) - new Date(a.createdAt);
-      } else if (currentFilter === 'toplike') {
-        return (b.likes || 0) - (a.likes || 0);
-      }
-      return 0;
-    });
+  // Filter notes by search query (frontend filtering)
+  const filteredNotes = notes.filter(note => {
+    const matchesSearch = note.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      note.content?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      note.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesSearch;
+  });
 
-  // Pagination
-  const totalPages = Math.ceil(filteredNotes.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentNotes = filteredNotes.slice(startIndex, endIndex);
-
+  // Pagination handler
   const goToPage = (page) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
+    if (page >= 1 && page <= (pagination.total_pages || 1)) {
+      const params = {
+        filter: currentFilter === 'toplike' ? 'top_like' : 'newest',
+        page: page,
+        per_page: itemsPerPage,
+        from_date: format(dateRange[0].startDate, 'yyyy-MM-dd'),
+        to_date: format(dateRange[0].endDate, 'yyyy-MM-dd')
+      };
+      fetchNotes(params);
     }
   };
 
   const getPageNumbers = () => {
     const pages = [];
+    const totalPages = pagination.total_pages || 1;
+    const currentPage = pagination?.current_page || 1;
+    
     if (totalPages <= 5) {
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
@@ -126,6 +139,14 @@ export default function NotesListPage() {
 
   return (
     <Layout>
+      {loading ? (
+        <div className="flex items-center justify-center w-full h-screen bg-gray-50">
+          <div className="text-center">
+            <div className="inline-block w-12 h-12 border-4 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
+            <p className="mt-4 text-gray-600">Loading notes...</p>
+          </div>
+        </div>
+      ) : (
       <div className="flex flex-col h-full overflow-hidden bg-gray-50">
         {/* Header */}
         <div className="px-6 py-4 space-y-4 bg-white border-b border-gray-200">
@@ -210,7 +231,7 @@ export default function NotesListPage() {
         {/* Notes Grid */}
         <div className="flex-1 p-6 overflow-auto">
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {currentNotes.map((note, index) => {
+            {filteredNotes.map((note, index) => {
               const noteColor = getNoteColor(index);
               const circleColor = getCircleColor(index);
               
@@ -292,12 +313,12 @@ export default function NotesListPage() {
           )}
 
           {/* Pagination */}
-          {totalPages > 1 && (
+          {(pagination.total_pages || 1) > 1 && (
             <div className="flex items-center justify-center mt-8 mb-4">
               <div className="flex items-center gap-1 px-2 py-2 bg-white border border-blue-500 rounded-full shadow-sm">
                 <button
-                  onClick={() => goToPage(currentPage - 1)}
-                  disabled={currentPage === 1}
+                  onClick={() => goToPage((pagination?.current_page || 1) - 1)}
+                  disabled={(pagination?.current_page || 1) === 1}
                   className="flex items-center justify-center w-10 h-10 text-white transition-colors bg-blue-500 rounded-full hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
                   <ChevronLeft className="w-5 h-5" />
@@ -311,7 +332,7 @@ export default function NotesListPage() {
                       key={page}
                       onClick={() => goToPage(page)}
                       className={`w-10 h-10 rounded-full font-medium text-sm transition-colors ${
-                        currentPage === page
+                        (pagination?.current_page || 1) === page
                           ? 'bg-blue-500 text-white'
                           : 'text-gray-700 hover:bg-gray-100'
                       }`}
@@ -322,8 +343,8 @@ export default function NotesListPage() {
                 ))}
 
                 <button
-                  onClick={() => goToPage(currentPage + 1)}
-                  disabled={currentPage === totalPages}
+                  onClick={() => goToPage((pagination?.current_page || 1) + 1)}
+                  disabled={(pagination?.current_page || 1) === (pagination.total_pages || 1)}
                   className="flex items-center justify-center w-10 h-10 text-white transition-colors bg-blue-500 rounded-full hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
                   <ChevronRight className="w-5 h-5" />
@@ -333,6 +354,7 @@ export default function NotesListPage() {
           )}
         </div>
       </div>
+      )}
     </Layout>
   );
 }

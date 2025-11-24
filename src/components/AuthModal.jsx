@@ -1,28 +1,97 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
 import { FcGoogle } from "react-icons/fc";
-import { FaFacebook, FaApple } from "react-icons/fa";
 import { HiOutlineEyeOff, HiOutlineEye } from "react-icons/hi";
+import { useAuth } from '@/contexts/AuthContext';
 
 import LoginBanner from '@/assets/images/login-banner-agora.png';
 import RegisterBanner from '@/assets/images/register-banner-agora.png';
 
+
 export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
-    const [mode, setMode] = useState(initialMode); // 'login' or 'register'
+    const { login, register } = useAuth();
+    const [mode, setMode] = useState(initialMode);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [formData, setFormData] = useState({
+        name: '',
+        email: '',
+        phone: '',
+        password: '',
+        password_confirmation: '',
+        remember_me: false
+    });
 
+    
     if (!isOpen) return null;
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        console.log('Form submitted:', mode);
+    const handleChange = (e) => {
+        const { name, value, type, checked } = e.target;
+        setFormData({
+            ...formData,
+            [name]: type === 'checkbox' ? checked : value
+        });
+        setError('');
     };
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
 
+        try {
+            if (mode === 'login') {
+                const result = await login({
+                    email: formData.email,
+                    password: formData.password,
+                    remember_me: formData.remember_me
+                });
+
+                if (result.success) {
+                    onClose();
+                } else {
+                    setError(result.message);
+                };
+            } else {
+                if (formData.password !== formData.password_confirmation) {
+                    setError('Password dan konfirmasi password tidak cocok');
+                    setLoading(false);
+                    return;
+                };
+
+                const result = await register({
+                    name: formData.name,
+                    email: formData.email,
+                    password: formData.password,
+                    password_confirmation: formData.password_confirmation
+                });
+
+                if (result.success) {
+                    onClose();
+                } else {
+                    setError(result.message);
+                };
+            }
+        } catch (err) {
+            setError('Terjadi kesalahan. Silakan coba lagi.');
+        } finally {
+            setLoading(false);
+        };
+    };
     const switchMode = (newMode) => {
         setMode(newMode);
         setShowPassword(false);
         setShowConfirmPassword(false);
+        setError('');
+        setFormData({
+            name: '',
+            email: '',
+            phone: '',
+            password: '',
+            password_confirmation: '',
+            remember_me: false
+        });
     };
 
     return (
@@ -38,15 +107,24 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                 >
                     <X className="w-6 h-6" />
                 </button>
-
                 {mode === 'login' ? (
                     <div className='space-y-4'>
                         <h2 className="text-2xl font-semibold text-center">Login</h2>
                         <img src={LoginBanner} alt="Description" className="object-cover aspect-video rounded-2xl" />
+                        
+                        {error && (
+                            <div className="p-3 text-sm text-red-600 bg-red-100 border border-red-200 rounded-lg">
+                                {error}
+                            </div>
+                        )}
+
                         <form onSubmit={handleSubmit} className="space-y-2">
                             <div>
                                 <input
                                     type="email"
+                                    name="email"
+                                    value={formData.email}
+                                    onChange={handleChange}
                                     placeholder="Email"
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                     required
@@ -55,6 +133,9 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                             <div className="relative">
                                 <input
                                     type={showPassword ? "text" : "password"}
+                                    name="password"
+                                    value={formData.password}
+                                    onChange={handleChange}
                                     placeholder="Password"
                                     className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                     required
@@ -74,7 +155,13 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
 
                             <div className="flex items-center justify-between text-sm">
                                 <label className="flex items-center gap-2 text-gray-600">
-                                    <input type="checkbox" className="accent-indigo-500" />
+                                    <input 
+                                        type="checkbox" 
+                                        name="remember_me"
+                                        checked={formData.remember_me}
+                                        onChange={handleChange}
+                                        className="accent-indigo-500" 
+                                    />
                                     Remember me
                                 </label>
                                 <a href="#" className="text-red-400 hover:text-red-500">
@@ -84,9 +171,10 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
 
                             <button
                                 type="submit"
-                                className="w-full py-2 text-white transition bg-indigo-500 rounded-md hover:bg-indigo-600"
+                                className="w-full py-2 text-white transition bg-indigo-500 rounded-md hover:bg-indigo-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                disabled={loading}
                             >
-                                Login
+                                {loading ? 'Loading...' : 'Login'}
                             </button>
 
                             <p className="text-sm text-center text-gray-600">
@@ -120,10 +208,18 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                     <div className='space-y-4'>
                         <h2 className="pb-2 text-2xl font-semibold text-center">Sign up</h2>
                         <img src={RegisterBanner} alt="RegisterBanner" className="object-cover aspect-video rounded-2xl" />
+                        {error && (
+                            <div className="p-3 text-sm text-red-600 bg-red-100 border border-red-200 rounded-lg">
+                                {error}
+                            </div>
+                        )}
                         <form onSubmit={handleSubmit} className="space-y-2">
                             <div>
                                 <input
                                     type="text"
+                                    name="name"
+                                    value={formData.name}
+                                    onChange={handleChange}
                                     placeholder="Full Name"
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                     required
@@ -132,15 +228,10 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                             <div>
                                 <input
                                     type="email"
+                                    name="email"
+                                    value={formData.email}
+                                    onChange={handleChange}
                                     placeholder="Email"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <input
-                                    type="tel"
-                                    placeholder="Phone Number"
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                     required
                                 />
@@ -148,6 +239,9 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                             <div className="relative">
                                 <input
                                     type={showPassword ? "text" : "password"}
+                                    name="password"
+                                    value={formData.password}
+                                    onChange={handleChange}
                                     placeholder="Password"
                                     className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                     required
@@ -167,6 +261,9 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                             <div className="relative">
                                 <input
                                     type={showConfirmPassword ? "text" : "password"}
+                                    name="password_confirmation"
+                                    value={formData.password_confirmation}
+                                    onChange={handleChange}
                                     placeholder="Confirm Password"
                                     className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                     required
@@ -183,7 +280,6 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                                     )}
                                 </button>
                             </div>
-
                             <div className="flex items-start gap-2 text-sm text-gray-600">
                                 <input type="checkbox" className="mt-1 accent-indigo-500" required />
                                 <p>
@@ -197,14 +293,13 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                                     </a>
                                 </p>
                             </div>
-
                             <button
                                 type="submit"
-                                className="w-full py-2 text-white transition bg-indigo-500 rounded-md hover:bg-indigo-600"
+                                className="w-full py-2 text-white transition bg-indigo-500 rounded-md hover:bg-indigo-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                disabled={loading}
                             >
-                                Create account
+                                {loading ? 'Creating...' : 'Create account'}
                             </button>
-
                             <p className="text-sm text-center text-gray-600">
                                 Already have an account?{" "}
                                 <button
@@ -215,13 +310,11 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                                     Login
                                 </button>
                             </p>
-
                             <div className="flex items-center my-4">
                                 <hr className="flex-grow border-gray-300" />
                                 <span className="px-2 text-sm text-gray-400">Or Sign up with</span>
                                 <hr className="flex-grow border-gray-300" />
                             </div>
-
                             <div className="flex justify-center w-full gap-4">
                                 <button
                                     type="button"
@@ -236,4 +329,4 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
             </div>
         </div>
     );
-}
+};

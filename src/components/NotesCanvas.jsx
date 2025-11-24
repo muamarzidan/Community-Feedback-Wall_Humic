@@ -5,6 +5,7 @@ import { closeAllMenus } from '../utils/domUtils';
 import NoteCard from './NoteCard';
 import BackgroundCanvas from "../assets/images/backgorund-canvas.png";
 
+
 const NotesCanvas = ({ 
   notes, 
   zoom, 
@@ -13,6 +14,7 @@ const NotesCanvas = ({
   onNoteDelete,
   onReactionUpdate,
   onStageClick,
+  onGuestWarning,
   width = window.innerWidth,
   height = window.innerHeight 
 }) => {
@@ -110,6 +112,7 @@ const NotesCanvas = ({
               onEdit={() => onNoteEdit(note)}
               onDelete={() => onNoteDelete(note.id)}
               onReactionUpdate={onReactionUpdate}
+              onGuestWarning={onGuestWarning}
             />
           ))}
         </Layer>

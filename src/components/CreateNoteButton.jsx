@@ -1,5 +1,6 @@
 import { Plus } from 'lucide-react';
 
+
 const CreateNoteButton = ({ onClick }) => {
   return (
     <button

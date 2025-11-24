@@ -1,5 +1,6 @@
 import { ZoomIn, ZoomOut } from 'lucide-react';
 
+
 const ZoomControls = ({ zoom, onZoomIn, onZoomOut }) => {
   return (
     <div className="flex flex-col items-center justify-center gap-2 w-fit">

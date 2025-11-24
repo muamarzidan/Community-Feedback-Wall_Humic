@@ -1,14 +1,26 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FcGoogle } from "react-icons/fc";
+import { IoArrowBack } from "react-icons/io5";
 import { HiOutlineEyeOff, HiOutlineEye } from "react-icons/hi";
+
+import { useAuth } from '@/contexts/AuthContext';
 import RegisterBanner from '@/assets/images/register-banner-agora.png';
 
 
 export default function SignUpPage() {
     const navigate = useNavigate();
+    const { register } = useAuth();
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [formData, setFormData] = useState({
+        name: '',
+        email: '',
+        password: '',
+        password_confirmation: ''
+    });
 
     // Reset cursor to default on auth pages
     useEffect(() => {
@@ -18,10 +30,39 @@ export default function SignUpPage() {
         };
     }, []);
 
-    const handleSubmit = (e) => {
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData({
+            ...formData,
+            [name]: value
+        });
+        setError('');
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // TODO: Handle authentication logic here
-        console.log('Register form submitted');
+        setError('');
+
+        // Validation
+        if (formData.password !== formData.password_confirmation) {
+            setError('Password dan konfirmasi password tidak cocok');
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            const result = await register(formData);
+            if (result.success) {
+                navigate('/');
+            } else {
+                setError(result.message);
+            }
+        } catch (err) {
+            setError('Terjadi kesalahan. Silakan coba lagi.');
+        } finally {
+            setLoading(false);
+        }
     };
     return (
         <div className="flex items-center justify-center min-h-screen bg-white">
@@ -46,10 +87,19 @@ export default function SignUpPage() {
                         Let's get you all set up so you can access your personal account.
                     </p>
 
+                    {error && (
+                        <div className="p-3 mb-4 text-sm text-red-600 bg-red-100 border border-red-200 rounded-lg">
+                            {error}
+                        </div>
+                    )}
+
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
                             <input
                                 type="text"
+                                name="name"
+                                value={formData.name}
+                                onChange={handleChange}
                                 placeholder="Full Name"
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                                 required
@@ -58,6 +108,9 @@ export default function SignUpPage() {
                         <div>
                             <input
                                 type="email"
+                                name="email"
+                                value={formData.email}
+                                onChange={handleChange}
                                 placeholder="Email"
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                                 required
@@ -68,12 +121,14 @@ export default function SignUpPage() {
                                 type="tel"
                                 placeholder="Phone Number"
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                                required
                             />
                         </div>
                         <div className="relative">
                             <input
                                 type={showPassword ? "text" : "password"}
+                                name="password"
+                                value={formData.password}
+                                onChange={handleChange}
                                 placeholder="Password"
                                 className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                                 required
@@ -93,6 +148,9 @@ export default function SignUpPage() {
                         <div className="relative">
                             <input
                                 type={showConfirmPassword ? "text" : "password"}
+                                name="password_confirmation"
+                                value={formData.password_confirmation}
+                                onChange={handleChange}
                                 placeholder="Confirm Password"
                                 className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                                 required
@@ -126,9 +184,10 @@ export default function SignUpPage() {
 
                         <button
                             type="submit"
-                            className="w-full py-2 text-white transition-colors rounded-lg cursor-pointer bg-primary-500 hover:bg-primary-700"
+                            className="w-full py-2 text-white transition-colors rounded-lg cursor-pointer bg-primary-500 hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                            disabled={loading}
                         >
-                            Create account
+                            {loading ? 'Creating...' : 'Create account'}
                         </button>
 
                         <p className="text-sm text-center text-gray-600">
@@ -147,6 +206,11 @@ export default function SignUpPage() {
                         <button type="button" className="flex items-center justify-center w-full gap-2 px-6 py-2 transition-colors border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-100">
                             <FcGoogle className="w-5 h-5" />
                         </button>
+
+                        <Link to="/" className='flex items-center justify-center gap-2'>
+                            <IoArrowBack className='w-4 h-4 text-gray-600'/>         
+                            <p className='text-sm text-gray-600'>Back to home</p>
+                        </Link> 
                     </form>
                 </div>
             </div>

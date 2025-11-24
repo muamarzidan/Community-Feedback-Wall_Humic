@@ -5,10 +5,11 @@ import Router from './Router.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import './index.css';
 
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ErrorBoundary>
       <Router />
     </ErrorBoundary>
   </StrictMode>,
-)
+);

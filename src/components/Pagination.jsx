@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
+
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
   const renderPageNumbers = () => {
     const pages = [];
@@ -18,7 +19,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
       if (currentPage > 3) {
         pages.push(<span key="dots1" className="px-2 text-white">...</span>);
       }
-    }
+    };
     // Show pages around current page
     for (let i = Math.max(1, currentPage - 1); i <= Math.min(totalPages, currentPage + 1); i++) {
       pages.push(
@@ -34,12 +35,12 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
           {i}
         </button>
       );
-    }
+    };
     // Always show last page
     if (currentPage < totalPages - 1) {
       if (currentPage < totalPages - 2) {
         pages.push(<span key="dots2" className="px-2 text-white">...</span>);
-      }
+      };
       
       pages.push(
         <button
@@ -50,7 +51,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
           {totalPages}
         </button>
       );
-    }
+    };
     return pages;
   };
 
