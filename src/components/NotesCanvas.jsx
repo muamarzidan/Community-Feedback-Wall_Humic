@@ -15,6 +15,7 @@ const NotesCanvas = ({
   onReactionUpdate,
   onStageClick,
   onGuestWarning,
+  onImageClick,
   width = window.innerWidth,
   height = window.innerHeight 
 }) => {
@@ -71,14 +72,14 @@ const NotesCanvas = ({
       // Close any open menus when clicking on empty space
       closeAllMenus();
       onStageClick?.(e);
-    }
+    };
   };
   // Prevent stage from getting confused when menu is clicked
   const handleClick = (e) => {
     // Let the event bubble up if it's not directly on the stage
     if (e.target !== e.target.getStage()) {
       return;
-    }
+    };
   };
 
   return (
@@ -86,10 +87,6 @@ const NotesCanvas = ({
       className="w-full h-full overflow-hidden bg-gray-50"
       style={{ cursor: cursorMode === 'drag' ? 'grab' : 'default', backgroundImage: `url(${BackgroundCanvas})` }}
     >
-      {/* <div
-        className="absolute inset-0 bg-center bg-cover opacity-60"
-        style={{ backgroundImage: `url(${BackgroundCanvas})` }}
-      ></div> */}
       <Stage
         ref={stageRef}
         width={width}
@@ -113,6 +110,7 @@ const NotesCanvas = ({
               onDelete={() => onNoteDelete(note.id)}
               onReactionUpdate={onReactionUpdate}
               onGuestWarning={onGuestWarning}
+              onImageClick={onImageClick}
             />
           ))}
         </Layer>

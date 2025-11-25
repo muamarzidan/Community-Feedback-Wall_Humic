@@ -1,10 +1,9 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import useImage from 'use-image';
 import { Group, Rect, Text, Image } from 'react-konva';
 
 import { formatReactionCount } from '../utils/formatReactionCounts.js';
 import { formatDate } from '../utils/formatDate.js';
-
 
 const SvgIcon = ({ svg, x, y, size = 12, onClick, cursorMode }) => {
   const [icon] = useImage(
@@ -33,21 +32,37 @@ const svgEdit = `
   <path d="m15 5 4 4" />
 </svg>
 `;
+
 const svgDelete = `
 <svg stroke="#ffffff" fill="#ffffff" stroke-width="0" viewBox="0 0 16 16" height="200px" width="200px" xmlns="http://www.w3.org/2000/svg"><path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5" />
 </svg>
 `;
 
-const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, cursorMode = 'drag' }) => {
+const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, onImageClick, cursorMode = 'drag' }) => {
   const [image] = useImage(note.image);
 
   const isAuthenticated = () => {
     return !!localStorage.getItem('token_community-feedback');
   };
 
+  const handleImageMouseEnter = (e) => {
+    const stage = e.target.getStage();
+    if (stage) {
+      stage.container().style.cursor = 'pointer';
+    };
+  };
+
+  const handleImageMouseLeave = (e) => {
+    const stage = e.target.getStage();
+    if (stage) {
+      stage.container().style.cursor = cursorMode === 'drag' ? 'grab' : 'default';
+    };
+  };
+
   const cardWidth = 355;
   const cornerRadius = 12;
   const padding = 16;
+  const contentWidth = cardWidth - (padding * 2); // 323px
   const userData = localStorage.getItem('user-data_community-feedback');
   const parsedUserData = userData ? JSON.parse(userData) : null;
   const currentUserId = parsedUserData ? parsedUserData?.id : null;
@@ -59,81 +74,133 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, cu
     { emoji: '🔥', type: 'fire', x: 267 }
   ];
 
-
-  const calculateTitleHeight = () => {
-    const titleText = note.title;
-    const avgCharsPerLine = 17; // Approximately for fontSize 20 bold
-    const estimatedLines = Math.max(1, Math.ceil(titleText.length / avgCharsPerLine));
-    const actualLines = Math.min(estimatedLines, 3); // Max 3 lines
-    return actualLines * 24; // 24px per line (20px font + 4px line height)
+  const isOwner = useMemo(() => {
+    if (!note?.userId || !currentUserId) return false;
+    return note.userId === currentUserId;
+  }, [note?.userId, currentUserId]);
+  // Kalkulasi tinggi text dengan Canvas measurement (lebih akurat!)
+  const measureTextHeight = (text, fontSize, fontStyle, maxWidth, lineHeight) => {
+    if (!text || text.length === 0) return fontSize * lineHeight;
+    
+    // Create temporary canvas untuk measurement
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    context.font = `${fontStyle} ${fontSize}px Arial, sans-serif`;
+    
+    const words = text.split(' ');
+    let lines = 1;
+    let currentLine = '';
+    
+    for (let i = 0; i < words.length; i++) {
+      const testLine = currentLine + (currentLine ? ' ' : '') + words[i];
+      const metrics = context.measureText(testLine);
+      
+      if (metrics.width > maxWidth && currentLine !== '') {
+        lines++;
+        currentLine = words[i];
+      } else {
+        currentLine = testLine;
+      };
+    };
+    
+    return Math.ceil(lines * fontSize * lineHeight);
   };
-  // Calculate description height based on text length
-  const calculateDescriptionHeight = () => {
-    const descriptionText = note.description || note.content || '';
-    const avgCharsPerLine = 45; // Approximately for fontSize 14
-    const estimatedLines = Math.max(1, Math.ceil(descriptionText.length / avgCharsPerLine));
-    return estimatedLines * 20; // 20px per line (14px font + 6px line height)
-  };
-  // Calculate dynamic card height based on all content
-  const calculateCardHeight = () => {
+  // Hitung dimensi semua elemen dengan measurement yang akurat
+  const dimensions = useMemo(() => {
+    const titleFontSize = 20;
+    const descFontSize = 14;
+    const titleLineHeight = 1.2; // Konva lineHeight multiplier
+    const descLineHeight = 1.43;
+    
+    // Measure actual text height
+    const titleHeight = measureTextHeight(
+      note.title, 
+      titleFontSize, 
+      'bold', 
+      contentWidth, 
+      titleLineHeight
+    );
+    
+    const descText = note.description || '';
+    const descHeight = measureTextHeight(
+      descText, 
+      descFontSize, 
+      'normal', 
+      contentWidth, 
+      descLineHeight
+    );
+    
+    // Image height
+    const imageHeight = note.image ? 176 : 0;
+    
+    return {
+      titleHeight,
+      descHeight,
+      imageHeight
+    };
+  }, [note.title, note.description, note.image, contentWidth]);
+  // Kalkulasi total height card
+  const cardHeight = useMemo(() => {
     let height = 0;
-    // Header (author name + date/buttons)
-    height += 16; // Top padding
+    // Header section
+    height += padding; // Top padding: 16
     height += 20; // Author name height
-    height += 32; // Spacing after header
+    height += (isOwner ? 36 : 24); // Space after header
     // Title
-    const titleHeight = calculateTitleHeight();
-    height += titleHeight;
+    height += dimensions.titleHeight;
     height += 8; // Gap after title
     // Description
-    const descriptionHeight = calculateDescriptionHeight();
-    height += descriptionHeight;
+    height += dimensions.descHeight;
     height += 12; // Gap after description
-    // Image (if exists)
-    if (note.image) {
-      height += 100; // Image height
+    // Image
+    if (dimensions.imageHeight > 0) {
+      height += dimensions.imageHeight;
       height += 10; // Gap after image
     }
     // Reactions
     height += 26; // Reaction buttons height
-    // Date for own notes (below reactions)
-    if (note.userType === 'you') {
-      height += 20; // Date height
-    }
-    height += 16; // Bottom padding
-
+    // Date for owner (below reactions)
+    if (isOwner) {
+      height += 8; // Gap before date
+      height += 18; // Date height
+    };
+    height += padding; // Bottom padding: 16
+    
     return height;
-  };
-  const cardHeight = calculateCardHeight();
+  }, [dimensions, isOwner, padding]);
   const handleReactionClick = useCallback((reactionType, e) => {
     e.cancelBubble = true;
     if (cursorMode === 'default') {
-      // Check if authenticated
       if (!isAuthenticated()) {
-        // Show guest warning modal
         if (onGuestWarning) {
           onGuestWarning('Please login to react to notes');
         }
         return;
-      }
+      };
       
       if (onReactionUpdate) {
         onReactionUpdate(note.id, reactionType);
-      }
-    }
+      };
+    };
   }, [note.id, onReactionUpdate, onGuestWarning, cursorMode]);
   const handleEditClick = useCallback((e) => {
     e.cancelBubble = true;
     if (cursorMode === 'default') {
       onEdit();
-    }
+    };
   }, [onEdit, cursorMode]);
   const handleDeleteClick = useCallback((e) => {
     e.cancelBubble = true;
     if (cursorMode === 'default') {
       onDelete();
-    }
+    };
   }, [onDelete, cursorMode]);
+  const handleImageClick = useCallback((e) => {
+    e.cancelBubble = true;
+    if (note.image && onImageClick) {
+      onImageClick(note.image);
+    };
+  }, [note.image, onImageClick]);
   const getUserTypeDisplay = () => {
     switch (note.userType) {
       case 'you':
@@ -144,26 +211,28 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, cu
         return '';
       default:
         return '';
-    }
+    };
   };
-  function replaceUserTypeNames (note) {
+  const replaceUserTypeNames = (note) => {
     if (note.userType === 'guest') {
-      note.author = "Guest"
-      return note.author;
-    }
+      return "Guest";
+    };
     return note.author;
   };
-  const findNotesUserIdToLocalStorage = (userId) => {
-    if (!userId || !currentUserId) return false;
-    if (userId === currentUserId) {
-      return true;
-    };
 
-    return false;
-  };
-
-
+  // Calculate Y positions
   let currentY = padding;
+  const headerHeight = 5;
+  const headerGap = isOwner ? 36 : 24;
+  const titleY = currentY + headerHeight + headerGap;
+  const imageY = titleY + dimensions.titleHeight + 8;
+  const descY = imageY + (dimensions.imageHeight > 0 ? dimensions.imageHeight + 12 : 0);
+  const reactionsY = descY + (dimensions.descHeight > 0 ? dimensions.descHeight + 12 : 0);
+  const dateY = reactionsY + 26 + 20;
+  // const descY = titleY + dimensions.titleHeight + 8;
+  // const imageY = descY + dimensions.descHeight + 12;
+  // const reactionsY = imageY + (dimensions.imageHeight > 0 ? dimensions.imageHeight + 10 : 0);
+  // const dateY = reactionsY + 26 + 8;
 
   return (
     <Group x={note.x} y={note.y}>
@@ -188,11 +257,11 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, cu
           text={`${replaceUserTypeNames(note)} ${getUserTypeDisplay()}`}
           fontSize={16}
           fill="#757575"
-          width={findNotesUserIdToLocalStorage(note?.userId) ? 162 : 162}
+          width={isOwner ? 200 : 200}
           ellipsis={true}
         />
-        {/* Date for other people's notes (next to name) */}
-        {!findNotesUserIdToLocalStorage(note?.userId) && (
+        {/* Date for other people's notes */}
+        {!isOwner && (
           <Text
             x={cardWidth - 85}
             y={currentY}
@@ -202,8 +271,9 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, cu
             align="right"
           />
         )}
-        {/* Edit & Delete buttons for own notes */}
-        {findNotesUserIdToLocalStorage(note?.userId) && (
+
+        {/* Edit & Delete buttons for owner */}
+        {isOwner && (
           <Group>
             {/* Edit Button */}
             <Rect
@@ -224,8 +294,8 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, cu
               size={17}
               onClick={handleEditClick}
               cursorMode={cursorMode}
-              fill="#000000"
             />
+
             {/* Delete Button */}
             <Rect
               x={cardWidth - 42}
@@ -250,144 +320,113 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, cu
         )}
       </Group>
       {/* Title */}
-      {(() => {
-        currentY += 32;
-        const titleHeight = calculateTitleHeight();
-        const maxTitleHeight = 72; // Max 3 lines (24px * 3)
-        return (
-          <Text
+      <Text
+        x={padding}
+        y={titleY}
+        text={note.title}
+        fontSize={20}
+        fontStyle="bold"
+        fill="#000000"
+        width={contentWidth}
+        wrap="word"
+        lineHeight={1.2}
+      />
+      {/* Image */}
+      {note.image && image && (
+        <Group
+          onClick={handleImageClick}
+          onTap={handleImageClick}
+          onMouseEnter={handleImageMouseEnter}
+          onMouseLeave={handleImageMouseLeave}
+          listening={true}
+        >
+          <Rect
             x={padding}
-            y={currentY}
-            text={note.title}
-            fontSize={20}
-            fontStyle="bold"
-            fill="#000000"
-            width={cardWidth - (padding * 2)}
-            wrap="word"
-            height={maxTitleHeight}
-            ellipsis={true}
+            y={imageY}
+            width={contentWidth}
+            height={176}
+            cornerRadius={8}
           />
-        );
-      })()}
+          <Image
+            x={padding + 2}
+            y={imageY + 2}
+            image={image}
+            width={contentWidth - 4}
+            height={172}
+            cornerRadius={6}
+            objectFit="cover"
+          />
+        </Group>
+      )}
       {/* Description */}
-      {(() => {
-        const titleHeight = calculateTitleHeight();
-        currentY += titleHeight + 8; // Actual title height + 8px gap
-        const descriptionText = note.description || note.content || '';
-        const descriptionHeight = calculateDescriptionHeight();
-        
-        return (
-          <Text
-            x={padding}
-            y={currentY}
-            text={descriptionText}
-            fontSize={14}
-            fill="#000000"
-            width={cardWidth - (padding * 2)}
-            wrap="word"
-          />
-        );
-      })()}
-      {/* Image (if exists) */}
-      {note.image && image && (() => {
-        const titleHeight = calculateTitleHeight();
-        const descriptionHeight = calculateDescriptionHeight();
-        currentY += descriptionHeight + 12; // Description height + 12px gap
-        
-        return (
-          <Group>
-            <Rect
-              x={padding}
-              y={currentY}
-              width={cardWidth - (padding * 2)}
-              height={100}
-              cornerRadius={8}
-              fill="white"
-            />
-            <Image
-              x={padding + 2}
-              y={currentY + 2}
-              image={image}
-              width={cardWidth - (padding * 2) - 4}
-              height={96}
-              cornerRadius={6}
-            />
-          </Group>
-        );
-      })()}
-      {/* Reactions Section */}
-      {(() => {
-        const titleHeight = calculateTitleHeight();
-        const descriptionHeight = calculateDescriptionHeight();
-        currentY += descriptionHeight + 12; // Move past description
-        
-        if (note.image) {
-          currentY += 100 + 10; // Image height + gap
-        }
-        
-        return (
-          <Group>
-            {reactions.map((reaction) => (
-              <Group key={reaction.type}>
-                {/* Reaction Background */}
-                <Rect
-                  x={padding + reaction.x}
-                  y={currentY}
-                  width={56}
-                  height={26}
-                  fill="white"
-                  cornerRadius={100}
-                  stroke="#e5e7eb"
-                  strokeWidth={1}
-                  onClick={(e) => handleReactionClick(reaction.type, e)}
-                  onTap={(e) => handleReactionClick(reaction.type, e)}
-                  listening={cursorMode === 'default'}
-                />
-                {/* Reaction Emoji */}
-                <Text
-                  x={
-                    note.reactions?.[reaction.type] >= 9
-                      ? padding + reaction.x + 3
-                      : padding + reaction.x + 8
-                  }
-                  y={currentY + 5}
-                  text={reaction.emoji}
-                  fontSize={16}
-                  onClick={(e) => handleReactionClick(reaction.type, e)}
-                  onTap={(e) => handleReactionClick(reaction.type, e)}
-                  listening={cursorMode === 'default'}
-                />
-                {/* Reaction Count */}
-                <Text
-                  x={padding + reaction.x + 24}
-                  y={currentY + 5}
-                  text={formatReactionCount(note.reactions?.[reaction.type] || 0)}
-                  fontSize={14}
-                  fill="#374151"
-                  fontStyle="bold"
-                  onClick={(e) => handleReactionClick(reaction.type, e)}
-                  onTap={(e) => handleReactionClick(reaction.type, e)}
-                  listening={cursorMode === 'default'}
-                />
-              </Group>
-            ))}
-          </Group>
-        );
-      })()}
-      {/* Date for own notes (below reactions) */}
-      {findNotesUserIdToLocalStorage(note?.userId) && (() => {
-        currentY += 26 + 4; // Reaction height + small gap
-        return (
-          <Text
-            x={cardWidth - 80}
-            y={currentY}
-            text={formatDate(note.createdAt)}
-            fontSize={10}
-            fill="#9ca3af"
-            align="right"
-          />
-        );
-      })()}
+      <Text
+        x={padding}
+        y={descY}
+        text={note.description || ''}
+        fontSize={14}
+        fill="#000000"
+        width={contentWidth}
+        wrap="word"
+        lineHeight={1.43}
+      />
+      {/* Reactions */}
+      <Group>
+        {reactions.map((reaction) => {
+          return (
+            <Group key={reaction.type}>
+              {/* Reaction Background */}
+              <Rect
+                x={padding + reaction.x}
+                y={reactionsY}
+                width={56}
+                height={26}
+                fill="white"
+                cornerRadius={100}
+                stroke="#e5e7eb"
+                strokeWidth={1}
+                onClick={(e) => handleReactionClick(reaction.type, e)}
+                onTap={(e) => handleReactionClick(reaction.type, e)}
+                listening={cursorMode === 'default'}
+              />
+              
+              {/* Reaction Emoji */}
+              <Text
+                x={padding + reaction.x + (note.reactions?.[reaction.type] >= 10 ? 3 : 8)}
+                y={reactionsY + 5}
+                text={reaction.emoji}
+                fontSize={16}
+                onClick={(e) => handleReactionClick(reaction.type, e)}
+                onTap={(e) => handleReactionClick(reaction.type, e)}
+                listening={cursorMode === 'default'}
+              />
+              
+              {/* Reaction Count */}
+              <Text
+                x={padding + reaction.x + 32}
+                y={reactionsY + 6}
+                text={formatReactionCount(note.reactions?.[reaction.type] || 0)}
+                fontSize={14}
+                fill="#374151"
+                fontStyle="bold"
+                onClick={(e) => handleReactionClick(reaction.type, e)}
+                onTap={(e) => handleReactionClick(reaction.type, e)}
+                listening={cursorMode === 'default'}
+              />
+            </Group>
+          );
+        })}
+      </Group>
+      {/* Date for owner (below reactions) */}
+      {isOwner && (
+        <Text
+          x={cardWidth - 86}
+          y={dateY}
+          text={formatDate(note.createdAt)}
+          fontSize={14}
+          fill="#757575"
+          align="right"
+        />
+      )}
     </Group>
   );
 };

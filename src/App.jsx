@@ -12,6 +12,7 @@ import ZoomControls from './components/ZoomControls';
 import Pagination from './components/Pagination';
 import NoteModal from './components/NoteModal';
 import GuestWarningModal from './components/GuestWarningModal';
+import ImageViewer from './components/ImageViewer';
 import './App.css';
 
 
@@ -33,6 +34,10 @@ function App() {
   const [guestWarningModal, setGuestWarningModal] = useState({
     isOpen: false,
     message: ''
+  });
+  const [imageViewer, setImageViewer] = useState({
+    isOpen: false,
+    imageUrl: ''
   });
 
   useEffect(() => {
@@ -122,6 +127,18 @@ function App() {
       message: message
     });
   };
+  const handleImageClick = (imageUrl) => {
+    setImageViewer({
+      isOpen: true,
+      imageUrl: imageUrl
+    });
+  };
+  const handleCloseImageViewer = () => {
+    setImageViewer({
+      isOpen: false,
+      imageUrl: ''
+    });
+  };
 
   return (
     <Layout>
@@ -145,6 +162,7 @@ function App() {
             onReactionUpdate={updateReaction}
             onStageClick={handleStageClick}
             onGuestWarning={handleGuestWarning}
+            onImageClick={handleImageClick}
           />
         {/* Pagination */}
         <div className="absolute z-50 transform -translate-x-1/2 bottom-20 sm:bottom-6 left-1/2">
@@ -192,6 +210,13 @@ function App() {
           isOpen={guestWarningModal.isOpen}
           message={guestWarningModal.message}
           onClose={() => setGuestWarningModal({ isOpen: false, message: '' })}
+        />
+        
+        {/* Image Viewer Modal */}
+        <ImageViewer
+          isOpen={imageViewer.isOpen}
+          imageUrl={imageViewer.imageUrl}
+          onClose={handleCloseImageViewer}
         />
     </Layout>
   );
