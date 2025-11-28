@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 
 import { getCurrentUser } from '../utils/getCurrentUser.js';
-import { notesAPI } from '../services/api';
+import { notesAPI } from '../lib/api.js';
 
 const GUEST_STORAGE_KEY = 'guest-note-timestamp';
 

@@ -25,7 +25,7 @@ const ImageViewer = ({ isOpen, imageUrl, onClose }) => {
 
     return (
         <div
-            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 animate-fadeIn"
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 animate-fadeIn"
             onClick={onClose}
         >
             {/* Image Container */}

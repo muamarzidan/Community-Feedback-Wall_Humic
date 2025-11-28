@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 import { getCurrentUser } from '../utils/getCurrentUser.js';
-import { listNotesAPI } from '../services/api';
+import { listNotesAPI } from '../lib/api.js';
 
 
 export const useListNotes = () => {

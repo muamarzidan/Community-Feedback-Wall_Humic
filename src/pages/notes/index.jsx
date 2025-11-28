@@ -7,6 +7,7 @@ import 'react-date-range/dist/theme/default.css';
 
 import { useListNotes } from '../../hooks/useListNotes';
 import Layout from '../../components/Layout';
+import ImageViewer from '../../components/ImageViewer';
 
 
 export default function NotesListPage() {
@@ -22,9 +23,13 @@ export default function NotesListPage() {
     }
   ]);
   const datePickerRef = useRef(null);
+  const [imageViewer, setImageViewer] = useState({
+    isOpen: false,
+    imageUrl: ''
+  });
   
   
-  const itemsPerPage = 10;
+  const itemsPerPage = 9; // Changed to 15 for masonry layout
   const colors = [
     '#E4CF7C',
     '#E5B9BE',
@@ -78,8 +83,39 @@ export default function NotesListPage() {
     const matchesSearch = note.title?.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesSearch;
   });
+  
+  // Masonry Layout: Distribute notes into 3 columns based on height
+  const distributeNotesToColumns = (notes) => {
+    const columns = [[], [], []]; // 3 columns
+    const columnHeights = [0, 0, 0]; // Track height of each column
+    
+    // Estimate card height (card with image ~500px, without image ~220px)
+    const estimateCardHeight = (note) => {
+      const baseHeight = 220; // Base card height
+      const imageHeight = note.image ? 160 : 0; // Image adds ~160px
+      const titleHeight = Math.ceil((note.title?.length || 0) / 30) * 24; // ~30 chars per line
+      const descHeight = Math.ceil((note.description?.length || 0) / 50) * 20; // ~50 chars per line
+      return baseHeight + imageHeight + titleHeight + descHeight;
+    };
+    
+    notes.forEach((note) => {
+      // Find the shortest column
+      const shortestColumnIndex = columnHeights.indexOf(Math.min(...columnHeights));
+      
+      // Add note to shortest column
+      columns[shortestColumnIndex].push(note);
+      
+      // Update column height
+      columnHeights[shortestColumnIndex] += estimateCardHeight(note);
+    });
+    
+    return columns;
+  };
+  
+  const noteColumns = distributeNotesToColumns(filteredNotes);
+  
   const goToPage = (page) => {
-    if (page >= 1 && page <= (pagination.total_pages || 1)) {
+    if (page >= 1 && page <= (pagination?.last_page || 1)) {
       const params = {
         filter: currentFilter === 'toplike' ? 'top_like' : 'newest',
         page: page,
@@ -92,7 +128,7 @@ export default function NotesListPage() {
   };
   const getPageNumbers = () => {
     const pages = [];
-    const totalPages = pagination.total_pages || 1;
+    const totalPages = pagination?.last_page || 1;
     const currentPage = pagination?.current_page || 1;
     
     if (totalPages <= 5) {
@@ -114,6 +150,13 @@ export default function NotesListPage() {
     const start = format(dateRange[0].startDate, 'dd MMM yyyy');
     const end = format(dateRange[0].endDate, 'dd MMM yyyy');
     return start === end ? start : `${start} - ${end}`;
+  };
+  
+  const handleImageClick = (imageUrl) => {
+    setImageViewer({
+      isOpen: true,
+      imageUrl: imageUrl
+    });
   };
 
   return (
@@ -206,85 +249,89 @@ export default function NotesListPage() {
           {/* Notes Title Desktop */}
           <h2 className="hidden text-2xl font-bold text-gray-900 sm:block">Notes</h2>
         </div>
-        {/* Notes Grid */}
+        {/* Notes Grid - Masonry Layout */}
         <div className="flex-1 p-6 overflow-auto">
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredNotes.map((note, index) => {
-              const circleColor = () => {
-                if (note.backgroundColor === '#FFFB00') return colors[0];
-                if (note.backgroundColor === '#FECBEB') return colors[1];
-                if (note.backgroundColor === '#9DFFCB') return colors[2];
-                if (note.backgroundColor === '#B5D9FF') return colors[3];
-                if (note.backgroundColor === '#F2C5FF') return colors[4];
-                return colors[index % colors.length];
-              };
-              
-              return (  
-                <div
-                  key={note.id}
-                  className="relative p-4 overflow-hidden shadow-md rounded-2xl"
-                  style={{ backgroundColor: note.backgroundColor}}
-                >
-                  {/* Decorative circle background */}
-                  <div
-                    className="absolute w-32 h-32 rounded-full -top-14 -right-14"
-                    style={{ backgroundColor: circleColor() }}
-                  ></div>
-                  {/* Author */}
-                  <div className="relative z-10 mb-3 text-xs font-medium text-gray-700 uppercase">
-                    {note?.author}
-                  </div>
-                  {/* Image if exists */}
-                  {note.image && (
-                    <div className="relative z-10 mb-4 overflow-hidden rounded-xl">
-                      <img 
-                        src={note.image} 
-                        alt="Note attachment" 
-                        className="object-cover w-full h-40"
-                      />
+          {/* 3 Column Masonry Layout */}
+          <div className="flex gap-6">
+            {noteColumns.map((column, columnIndex) => (
+              <div key={columnIndex} className="flex flex-col flex-1 gap-6">
+                {column.map((note) => {
+                  const circleColor = () => {
+                    if (note.backgroundColor === '#FFFB00') return colors[0];
+                    if (note.backgroundColor === '#FECBEB') return colors[1];
+                    if (note.backgroundColor === '#9DFFCB') return colors[2];
+                    if (note.backgroundColor === '#B5D9FF') return colors[3];
+                    if (note.backgroundColor === '#F2C5FF') return colors[4];
+                    return colors[0];
+                  };
+                  
+                  return (
+                    <div
+                      key={note.id}
+                      className="relative p-4 overflow-hidden shadow-md rounded-2xl"
+                      style={{ backgroundColor: note.backgroundColor }}
+                    >
+                      {/* Decorative circle background */}
+                      <div
+                        className="absolute w-32 h-32 rounded-full -top-14 -right-14"
+                        style={{ backgroundColor: circleColor() }}
+                      ></div>
+                      {/* Author */}
+                      <div className="relative z-10 mb-3 text-xs font-medium text-gray-700 uppercase">
+                        {note?.author}
+                      </div>
+                      {/* Image if exists */}
+                      {note.image && (
+                        <div 
+                          className="relative z-10 mb-4 overflow-hidden cursor-pointer rounded-xl group"
+                          onClick={() => handleImageClick(note.image)}
+                        >
+                          <img 
+                            src={note.image} 
+                            alt="Note attachment" 
+                            className="object-cover w-full transition-transform h-44 group-hover:scale-105"
+                          />
+                        </div>
+                      )}
+                      {/* Content */}
+                      <div className="relative z-10 mb-4">
+                        <h3 className="mb-2 text-base font-bold text-black">
+                          {note.title}
+                        </h3>
+                        <p className="text-sm leading-relaxed text-black">
+                          {note.description}
+                        </p>
+                      </div>
+                      {/* Reaction */}
+                      <div className="relative z-10 flex items-center justify-start">
+                        {/* Reactions with background */}
+                        <div className="flex items-center gap-2">
+                          <span className="flex items-center gap-1 px-2 py-1 text-xs bg-white rounded-full">
+                            ❤️ <span className="font-medium text-gray-700">{note.reactions?.heart || 0}</span>
+                          </span>
+                          <span className="flex items-center gap-1 px-2 py-1 text-xs bg-white rounded-full">
+                            👍 <span className="font-medium text-gray-700">{note.reactions?.like || 0}</span>
+                          </span>
+                          <span className="flex items-center gap-1 px-2 py-1 text-xs bg-white rounded-full">
+                            😂 <span className="font-medium text-gray-700">{note.reactions?.laugh || 0}</span>
+                          </span>
+                          <span className="flex items-center gap-1 px-2 py-1 text-xs bg-white rounded-full">
+                            😊 <span className="font-medium text-gray-700">{note.reactions?.surprised || 0}</span>
+                          </span>
+                          <span className="flex items-center gap-1 px-2 py-1 text-xs bg-white rounded-full">
+                            🔥 <span className="font-medium text-gray-700">{note.reactions?.fire || 0}</span>
+                          </span>
+                        </div>
+                      </div>
+                      {/* Date */}
+                      <div className="mt-2 text-xs font-medium text-gray-600">
+                        {format(new Date(note.createdAt), 'dd/MM/yyyy')}
+                      </div>
                     </div>
-                  )}
-                  {/* Content */}
-                  <div className="relative z-10 mb-4">
-                    <h3 className="mb-2 text-base font-bold text-black">
-                      {note.title}
-                    </h3>
-                    <p className="text-sm leading-relaxed text-black line-clamp-3">
-                      {note.description}
-                    </p>
-                  </div>
-                  {/* Reaction */}
-                  <div className="relative z-10 flex items-center justify-start">
-                    {/* Reactions with background */}
-                    <div className="flex items-center gap-2">
-                      <span className="flex items-center gap-1 px-2 py-1 text-xs bg-white rounded-full">
-                        ❤️ <span className="font-medium text-gray-700">{note.reactions?.heart || 0}</span>
-                      </span>
-                      <span className="flex items-center gap-1 px-2 py-1 text-xs bg-white rounded-full">
-                        👍 <span className="font-medium text-gray-700">{note.reactions?.like || 0}</span>
-                      </span>
-                      <span className="flex items-center gap-1 px-2 py-1 text-xs bg-white rounded-full">
-                        😂 <span className="font-medium text-gray-700">{note.reactions?.laugh || 0}</span>
-                      </span>
-                      <span className="flex items-center gap-1 px-2 py-1 text-xs bg-white rounded-full">
-                        😊 <span className="font-medium text-gray-700">{note.reactions?.surprised || 0}</span>
-                      </span>
-                      <span className="flex items-center gap-1 px-2 py-1 text-xs bg-white rounded-full">
-                        🔥 <span className="font-medium text-gray-700">{note.reactions?.fire || 0}</span>
-                      </span>
-                    </div>
-                  </div>
-                  {/* Date */}
-                  <div className="mt-2 text-xs font-medium text-gray-600">
-                    {format(new Date(note.createdAt), 'dd/MM/yyyy')}
-                  </div>
-                  {/* Info Posted */}
-                  {/* <div className="relative z-10 mt-2 text-xs text-gray-500">
-                    Posted {Math.floor((Date.now() - new Date(note.createdAt).getTime()) / (1000 * 60 * 60 * 24))} days ago
-                  </div> */}
-                </div>
-              );
-            })}
+                  );
+                })}
+              </div>
+            ))}
           </div>
           {/* Empty state */}
           {filteredNotes.length === 0 && (
@@ -293,7 +340,7 @@ export default function NotesListPage() {
             </div>
           )}
           {/* Pagination */}
-          {(pagination.total_pages || 1) > 1 && (
+          {(pagination?.last_page || 1) > 1 && (
             <div className="flex items-center justify-center mt-8 mb-4">
               <div className="flex items-center gap-1 px-2 py-2 bg-white border border-blue-500 rounded-full shadow-sm">
                 <button
@@ -324,7 +371,7 @@ export default function NotesListPage() {
 
                 <button
                   onClick={() => goToPage((pagination?.current_page || 1) + 1)}
-                  disabled={(pagination?.current_page || 1) === (pagination.total_pages || 1)}
+                  disabled={(pagination?.current_page || 1) === (pagination?.last_page || 1)}
                   className="flex items-center justify-center w-10 h-10 text-white transition-colors bg-blue-500 rounded-full hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
                   <ChevronRight className="w-5 h-5" />
@@ -335,6 +382,12 @@ export default function NotesListPage() {
         </div>
       </div>
       )}
+      {/* Image Viewer Modal */}
+      <ImageViewer
+        isOpen={imageViewer.isOpen}
+        imageUrl={imageViewer.imageUrl}
+        onClose={() => setImageViewer({ isOpen: false, imageUrl: '' })}
+      />
     </Layout>
   );
 };

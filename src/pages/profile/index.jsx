@@ -7,7 +7,7 @@ import { FiEdit3 } from "react-icons/fi";
 import { MdLock } from "react-icons/md";
 import toast from "react-hot-toast";
 
-import { userAPI, authAPI } from "../../services/api";
+import { userAPI, authAPI } from "../../lib/api";
 import Layout from "../../components/Layout";
 import UpdatePasswordModal from "../../components/UpdatePasswordModal";
 

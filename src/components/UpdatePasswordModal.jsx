@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { X } from 'lucide-react';
 import { HiOutlineEyeOff, HiOutlineEye } from "react-icons/hi";
 
-import { userAPI } from '@/services/api';
+import { userAPI } from '@/lib/api';
 
 
 export default function UpdatePasswordModal({ isOpen, onClose }) {

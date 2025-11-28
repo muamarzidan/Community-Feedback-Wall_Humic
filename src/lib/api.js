@@ -1,5 +1,6 @@
 import axios from 'axios';
 
+
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'https://humic.xtrahera.com',
   headers: {
@@ -39,20 +40,17 @@ api.interceptors.response.use(
   }
 );
 
-// Auth API endpoints
 export const authAPI = {
   login: (credentials) => api.post('/api/login', credentials),
   register: (userData) => api.post('/api/register', userData),
   logout: () => api.post('/api/logout'),
   getCurrentUser: () => api.get('/api/me'),
 };
-// User API endpoints
 export const userAPI = {
   getUser: () => api.get('/api/user'),
   updateProfile: (userData) => api.put('/api/profile', userData),
   updatePassword: (passwordData) => api.put('/api/password', passwordData),
 };
-// Canvas Notes API endpoints (for main canvas page)
 export const canvasNotesAPI = {
   getCanvasNotes: (canvasId = 1) => api.get(`/api/canvas/${canvasId}/notes`),
   getNoteById: (noteId) => api.get(`/api/notes/${noteId}`),
@@ -99,7 +97,6 @@ export const canvasNotesAPI = {
   toggleReaction: (noteId, reactionType) => 
     api.post(`/api/notes/${noteId}/reaction`, { reaction_type: reactionType }),
 };
-// List Notes API endpoints (for notes list page with filters)
 export const listNotesAPI = {
   getAllNotes: () => api.get('/api/notes'),
   getFilteredNotes: (params = {}) => {

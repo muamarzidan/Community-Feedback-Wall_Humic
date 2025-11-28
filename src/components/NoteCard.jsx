@@ -5,6 +5,8 @@ import { Group, Rect, Text, Image } from 'react-konva';
 import { formatReactionCount } from '../utils/formatReactionCounts.js';
 import { formatDate } from '../utils/formatDate.js';
 
+
+
 const SvgIcon = ({ svg, x, y, size = 12, onClick, cursorMode }) => {
   const [icon] = useImage(
     `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`
@@ -44,15 +46,25 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, on
   const isAuthenticated = () => {
     return !!localStorage.getItem('token_community-feedback');
   };
-
   const handleImageMouseEnter = (e) => {
     const stage = e.target.getStage();
     if (stage) {
-      stage.container().style.cursor = 'pointer';
+      stage.container().style.cursor = cursorMode === 'drag' ? 'grab' : 'pointer';
     };
   };
-
   const handleImageMouseLeave = (e) => {
+    const stage = e.target.getStage();
+    if (stage) {
+      stage.container().style.cursor = cursorMode === 'drag' ? 'grab' : 'default';
+    };
+  };
+  const handleButtonMouseEnter = (e) => {
+    const stage = e.target.getStage();
+    if (stage) {
+      stage.container().style.cursor = cursorMode === 'drag' ? 'grab' : 'pointer';
+    };
+  };
+  const handleButtonMouseLeave = (e) => {
     const stage = e.target.getStage();
     if (stage) {
       stage.container().style.cursor = cursorMode === 'drag' ? 'grab' : 'default';
@@ -271,7 +283,6 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, on
             align="right"
           />
         )}
-
         {/* Edit & Delete buttons for owner */}
         {isOwner && (
           <Group>
@@ -285,6 +296,8 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, on
               cornerRadius={100}
               onClick={handleEditClick}
               onTap={handleEditClick}
+              onMouseEnter={handleButtonMouseEnter}
+              onMouseLeave={handleButtonMouseLeave}
               listening={cursorMode === 'default'}
             />
             <SvgIcon
@@ -295,7 +308,6 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, on
               onClick={handleEditClick}
               cursorMode={cursorMode}
             />
-
             {/* Delete Button */}
             <Rect
               x={cardWidth - 42}
@@ -306,6 +318,8 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, on
               cornerRadius={100}
               onClick={handleDeleteClick}
               onTap={handleDeleteClick}
+              onMouseEnter={handleButtonMouseEnter}
+              onMouseLeave={handleButtonMouseLeave}
               listening={cursorMode === 'default'}
             />
             <SvgIcon
@@ -346,6 +360,7 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, on
             width={contentWidth}
             height={176}
             cornerRadius={8}
+            fill="#f0f0f0"
           />
           <Image
             x={padding + 2}
@@ -354,7 +369,37 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, on
             width={contentWidth - 4}
             height={172}
             cornerRadius={6}
-            objectFit="cover"
+            crop={(() => {
+              // Calculate object-fit: cover crop
+              const imgWidth = image.width;
+              const imgHeight = image.height;
+              const targetWidth = contentWidth - 4;
+              const targetHeight = 172;
+              const imgRatio = imgWidth / imgHeight;
+              const targetRatio = targetWidth / targetHeight;
+              
+              let cropX = 0;
+              let cropY = 0;
+              let cropWidth = imgWidth;
+              let cropHeight = imgHeight;
+              
+              if (imgRatio > targetRatio) {
+                // Image is wider - crop sides
+                cropWidth = imgHeight * targetRatio;
+                cropX = (imgWidth - cropWidth) / 2;
+              } else {
+                // Image is taller - crop top/bottom
+                cropHeight = imgWidth / targetRatio;
+                cropY = (imgHeight - cropHeight) / 2;
+              }
+              
+              return {
+                x: cropX,
+                y: cropY,
+                width: cropWidth,
+                height: cropHeight
+              };
+            })()}
           />
         </Group>
       )}

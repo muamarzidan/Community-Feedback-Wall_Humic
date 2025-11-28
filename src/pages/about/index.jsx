@@ -1,53 +1,61 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Search, Mail, UserPlus } from 'lucide-react';
 
 import Layout from '../../components/Layout';
-import AmarProfile from '@/assets/images/profile-amar-about-agora.jpeg';
+import AmarProfile from '@/assets/images/profile.jpg';
 import FigmaIcon from '@/assets/icons/figma-agora.png';
 
+
+const teamMembers = [
+    {
+        name: "Difa Rindang Utari",
+        alt: "Profile Difa Rindang Utari - Agora",
+        role: "UI/UX Designer",
+        description: "Fokus pada user experience, prototyping, dan sistem desain. Sering menulis dokumentasi & membuat komponen reusable.",
+        tools: ["Figma", "Figjam", "AI"],
+        bgColor: "bg-[#F3E8FF]",
+        image: AmarProfile,
+        linkedin: "https://www.linkedin.com/in/difa-rindang-utari/",
+        email: "difa@gmail.com"
+    },
+    {
+        name: "Arya Jagadditha",
+        alt: "Profile Arya Jagadditha - Agora",
+        role: "Backend Engineer",
+        description: "Menangani API, database, dan optimasi performa server-side untuk memastikan integrasi lancar.",
+        tools: ["Node.js", "Express", "MongoDB"],
+        bgColor: "bg-[#FFE8E8]",
+        image: AmarProfile,
+        linkedin: "https://www.linkedin.com/in/arya-jagadditha/",
+        email: "arya@gmail.com"
+    },
+    {
+        name: "Muamar Zidan Tri Antoro",
+        alt: "Profile Muamar Zidan Tri Antoro - Agora",
+        role: "Frontend Developer",
+        description: "Membangun antarmuka yang interaktif dan cepat dengan React dan Tailwind CSS.",
+        tools: ["React", "Tailwind", "JavaScript"],
+        bgColor: "bg-[#E8F4F8]",
+        image: AmarProfile,
+        linkedin: "https://www.linkedin.com/in/muamar-zidan-tri-antoro/",
+        email: "muamar@gmail.com"
+    },
+    {
+        name: "Muhammad Dani Arya Putra",
+        alt: "Profile Muhammad Dani Arya Putra - Agora",
+        role: "Mobile Developer",
+        description: "Mengembangkan aplikasi mobile cross-platform menggunakan React Native untuk pengalaman pengguna yang mulus.",
+        tools: ["React Native", "Expo", "JavaScript"],
+        bgColor: "bg-[#FFF8E8]",
+        image: AmarProfile,
+        linkedin: "https://www.linkedin.com/in/muhammad-dani-arya-putra/",
+        email: "dani@gmail.com"
+    }
+];
 export default function AboutPage() {
-    const teamMembers = [
-        {
-            name: "Muamar Zidan Tri Antoro",
-            alt: "Profile Muamar Zidan Tri Antoro - Agora",
-            role: "UI/UX Designer",
-            description: "Fokus pada user experience, prototyping, dan sistem desain. Sering menulis dokumentasi & membuat komponen reusable.",
-            tools: ["Figma", "Figma", "Figma", "Figma"],
-            bgColor: "bg-[#E8F4F8]",
-            image: AmarProfile
-        },
-        {
-            name: "Difa Rindang Utari",
-            alt: "Profile Difa Rindang Utari - Agora",
-            role: "Frontend Developer",
-            description: "Membangun antarmuka yang interaktif dan cepat dengan React dan Tailwind CSS.",
-            tools: ["React", "Tailwind", "JavaScript"],
-            bgColor: "bg-[#F3E8FF]",
-            image: AmarProfile
-        },
-        {
-            name: "Rafi Ramadhan",
-            alt: "Profile Rafi Ramadhan - Agora",
-            role: "Backend Engineer",
-            description: "Menangani API, database, dan optimasi performa server-side untuk memastikan integrasi lancar.",
-            tools: ["Node.js", "Express", "MongoDB"],
-            bgColor: "bg-[#FFE8E8]",
-            image: AmarProfile
-        },
-        {
-            name: "Salsabila Nur",
-            alt: "Profile Salsabila Nur - Agora",
-            role: "Project Manager",
-            description: "Mengatur jalannya proyek dan memastikan komunikasi antar tim berjalan efisien.",
-            tools: ["Notion", "Figma", "Slack"],
-            bgColor: "bg-[#FFF8E8]",
-            image: AmarProfile
-        }
-    ];
-
     const [searchTerm, setSearchTerm] = useState('');
-
-    // filter hasil pencarian
+    
     const filteredMembers = teamMembers.filter((member) => {
         const term = searchTerm.toLowerCase();
         return (
@@ -139,14 +147,14 @@ export default function AboutPage() {
                                         </div>
                                         {/* Action Buttons */}
                                         <div className="flex gap-3 pt-2">
-                                            <button className="flex items-center justify-center w-full gap-2 px-3 py-3 text-xs text-white transition-all rounded-full shadow-sm cursor-pointer sm:px-4 xl:px-6 sm:w-fit sm:text-base xl:text-xl bg-primary-500 hover:bg-primary-700">
+                                            <Link to={member.linkedin} target='_blank' className="flex items-center justify-center w-full gap-2 px-3 py-3 text-xs text-white transition-all rounded-full shadow-sm cursor-pointer sm:px-4 xl:px-6 sm:w-fit sm:text-base xl:text-xl bg-primary-500 hover:bg-primary-700">
                                                 <UserPlus className="w-5 h-5" />
                                                 Connect
-                                            </button>
-                                            <button className="flex items-center justify-center w-full gap-2 px-3 text-xs transition-all rounded-full cursor-pointer sm:px-4 xl:px-6 sm:w-fit sm:text-base xl:text-xl text-primary-500 bg-primary-50 hover:bg-primary-100">
+                                            </Link>
+                                            <Link to={`mailto:${member.email}`} target='_blank'  className="flex items-center justify-center w-full gap-2 px-3 text-xs transition-all rounded-full cursor-pointer sm:px-4 xl:px-6 sm:w-fit sm:text-base xl:text-xl text-primary-500 bg-primary-50 hover:bg-primary-100">
                                                 <Mail className="w-5 h-5" />
                                                 Email
-                                            </button>
+                                            </Link>
                                         </div>
                                     </div>
                                 </div>
@@ -162,4 +170,4 @@ export default function AboutPage() {
             </div>
         </Layout>
     );
-};
+}; 

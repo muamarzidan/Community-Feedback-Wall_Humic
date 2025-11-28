@@ -13,6 +13,8 @@ import Pagination from './components/Pagination';
 import NoteModal from './components/NoteModal';
 import GuestWarningModal from './components/GuestWarningModal';
 import ImageViewer from './components/ImageViewer';
+import Toast from './components/Toast';
+import DeleteConfirmModal from './components/DeleteConfirmModal';
 import './App.css';
 
 
@@ -38,6 +40,16 @@ function App() {
   const [imageViewer, setImageViewer] = useState({
     isOpen: false,
     imageUrl: ''
+  });
+  const [toast, setToast] = useState({
+    isOpen: false,
+    message: '',
+    type: 'success'
+  });
+  const [deleteConfirm, setDeleteConfirm] = useState({
+    isOpen: false,
+    noteId: null,
+    noteTitle: ''
   });
 
   useEffect(() => {
@@ -74,6 +86,11 @@ function App() {
     try {
       if (modalState.editingNote) {
         await updateNote(modalState.editingNote.id, noteData);
+        setToast({
+          isOpen: true,
+          message: 'Note updated successfully!',
+          type: 'success'
+        });
       } else {
         // Check if guest can create note
         if (!isAuthenticated() && !canGuestCreateNote()) {
@@ -82,6 +99,11 @@ function App() {
         };
         
         await addNote(noteData);
+        setToast({
+          isOpen: true,
+          message: 'Note created successfully!',
+          type: 'success'
+        });
         // Navigate to page 1 to show the new note
         setTimeout(() => resetToFirstPage(), 100);
       };
@@ -92,7 +114,11 @@ function App() {
       });
     } catch (error) {
       console.error('Error saving note:', error);
-      alert(error.message || 'Failed to save note. Please try again.');
+      setToast({
+        isOpen: true,
+        message: error.message || 'Failed to save note',
+        type: 'error'
+      });
     };
   };
   const handleDeleteNote = async (noteId) => {
@@ -101,14 +127,30 @@ function App() {
       return;
     };
     
-    if (window.confirm('Are you sure you want to delete this note?')) {
-      try {
-        await deleteNote(noteId);
-      } catch (error) {
-        console.error('Error deleting note:', error);
-        alert('Failed to delete note. Please try again.');
-      };
-    };
+    const noteToDelete = notes.find(n => n.id === noteId);
+    
+    setDeleteConfirm({
+      isOpen: true,
+      noteId: noteId,
+      noteTitle: noteToDelete?.title || ''
+    });
+  };
+  const confirmDelete = async () => {
+    try {
+      await deleteNote(deleteConfirm.noteId);
+      setToast({
+        isOpen: true,
+        message: 'Note deleted successfully!',
+        type: 'success'
+      });
+    } catch (error) {
+      console.error('Error deleting note:', error);
+      setToast({
+        isOpen: true,
+        message: 'Failed to delete note',
+        type: 'error'
+      });
+    }
   };
   const handleCloseModal = () => {
     setModalState({
@@ -217,6 +259,22 @@ function App() {
           isOpen={imageViewer.isOpen}
           imageUrl={imageViewer.imageUrl}
           onClose={handleCloseImageViewer}
+        />
+        
+        {/* Toast Notification */}
+        <Toast
+          isOpen={toast.isOpen}
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ isOpen: false, message: '', type: 'success' })}
+        />
+        
+        {/* Delete Confirmation Modal */}
+        <DeleteConfirmModal
+          isOpen={deleteConfirm.isOpen}
+          noteTitle={deleteConfirm.noteTitle}
+          onClose={() => setDeleteConfirm({ isOpen: false, noteId: null, noteTitle: '' })}
+          onConfirm={confirmDelete}
         />
     </Layout>
   );
