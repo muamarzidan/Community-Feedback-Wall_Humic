@@ -6,6 +6,7 @@ import { HiOutlineEyeOff, HiOutlineEye } from "react-icons/hi";
 
 import { useAuth } from '@/contexts/AuthContext';
 import RegisterBanner from '@/assets/images/register-banner-agora.png';
+import PasswordStrengthIndicator from '@/components/PasswordStrengthIndicator';
 
 
 export default function SignUpPage() {
@@ -144,6 +145,7 @@ export default function SignUpPage() {
                                     <HiOutlineEyeOff className="w-5 h-5" />
                                 )}
                             </button>
+                            <PasswordStrengthIndicator password={formData.password} />
                         </div>
                         <div className="relative">
                             <input

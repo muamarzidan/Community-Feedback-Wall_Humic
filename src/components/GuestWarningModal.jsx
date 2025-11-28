@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 const GuestWarningModal = ({ isOpen, onClose, message }) => {
   const navigate = useNavigate();
 
-  
+
   if (!isOpen) return null;
 
   const handleLogin = () => {
@@ -23,7 +23,7 @@ const GuestWarningModal = ({ isOpen, onClose, message }) => {
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 transition-colors hover:text-gray-600"
+            className="text-gray-400 transition-colors cursor-pointer hover:text-gray-600"
           >
             <X className="w-6 h-6" />
           </button>
@@ -38,13 +38,13 @@ const GuestWarningModal = ({ isOpen, onClose, message }) => {
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-2 text-gray-700 transition-colors bg-gray-100 rounded-lg hover:bg-gray-200"
+            className="flex-1 px-4 py-2 text-gray-700 transition-colors bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200"
           >
             Cancel
           </button>
           <button
             onClick={handleLogin}
-            className="flex-1 px-4 py-2 text-white transition-colors bg-blue-500 rounded-lg hover:bg-blue-600"
+            className="flex-1 px-4 py-2 text-white transition-colors bg-blue-500 rounded-lg cursor-pointer hover:bg-blue-600"
           >
             Login
           </button>

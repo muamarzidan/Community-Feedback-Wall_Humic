@@ -12,9 +12,6 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
     delete_image: false
   });
   
-  const isAuthenticated = () => {
-    return !!localStorage.getItem('token_community-feedback');
-  };
   const colorOptions = [
     { name: 'Yellow', value: '#FFFB00' },
     { name: 'Pink', value: '#FECBEB' },
@@ -22,6 +19,10 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
     { name: 'Green', value: '#9DFFCB' },
     { name: 'Purple', value: '#F2C5FF' },
   ];
+  
+  const isAuthenticated = () => {
+    return !!localStorage.getItem('token_community-feedback');
+  };
   
   useEffect(() => {
     if (note) {
@@ -44,18 +45,16 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
         imagePreview: null,
         delete_image: false
       });
-    }
+    };
   }, [note, isOpen]);
   
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.title.trim()) return;
-    
-    // Validate email for guest users
     if (!isAuthenticated() && !formData.email.trim()) {
       alert('Email is required for guest users');
       return;
-    }
+    };
     
     const noteData = {
       ...formData,
@@ -76,21 +75,17 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
       [field]: value
     }));
   };
-
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         alert('Image size must be less than 5MB');
         return;
-      }
-
-      // Validate file type
+      };
       if (!['image/jpeg', 'image/jpg', 'image/png', 'image/pdf'].includes(file.type)) {
         alert('Only JPG, PNG, or PDF files are allowed');
         return;
-      }
+      };
 
       setFormData(prev => ({
         ...prev,
@@ -98,9 +93,8 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
         imagePreview: URL.createObjectURL(file),
         delete_image: false
       }));
-    }
+    };
   };
-
   const handleRemoveImage = () => {
     setFormData(prev => ({
       ...prev,
@@ -146,7 +140,6 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
               <p className="mt-1 text-xs text-gray-500">Required for guest users</p>
             </div>
           )}
-          
           {/* Title */}
           <div>
             <label className="block mb-2 text-sm font-medium text-gray-700">
@@ -244,19 +237,18 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
               )}
             </div>
           )}
-          
           {/* Buttons */}
           <div className="flex gap-3 pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 text-gray-700 transition-colors bg-gray-100 rounded-lg hover:bg-gray-200"
+              className="flex-1 px-4 py-2 text-gray-700 transition-colors bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-2 text-white transition-colors bg-blue-500 rounded-lg hover:bg-blue-600"
+              className="flex-1 px-4 py-2 text-white transition-colors bg-blue-500 rounded-lg cursor-pointer hover:bg-blue-600"
             >
               {note ? 'Update' : 'Create'}
             </button>

@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import { HiOutlineEyeOff, HiOutlineEye } from "react-icons/hi";
 
 import { userAPI } from '@/lib/api';
+import PasswordStrengthIndicator from './PasswordStrengthIndicator';
 
 
 export default function UpdatePasswordModal({ isOpen, onClose }) {
@@ -131,7 +132,6 @@ export default function UpdatePasswordModal({ isOpen, onClose }) {
                             )}
                         </button>
                     </div>
-
                     {/* New Password */}
                     <div className="relative">
                         <label className="block mb-1 text-sm font-medium text-gray-700">
@@ -157,8 +157,8 @@ export default function UpdatePasswordModal({ isOpen, onClose }) {
                                 <HiOutlineEyeOff className="w-5 h-5" />
                             )}
                         </button>
+                        <PasswordStrengthIndicator password={formData.password} />
                     </div>
-
                     {/* Confirm Password */}
                     <div className="relative">
                         <label className="block mb-1 text-sm font-medium text-gray-700">
@@ -185,7 +185,6 @@ export default function UpdatePasswordModal({ isOpen, onClose }) {
                             )}
                         </button>
                     </div>
-
                     <div className="flex gap-3 pt-4">
                         <button
                             type="button"

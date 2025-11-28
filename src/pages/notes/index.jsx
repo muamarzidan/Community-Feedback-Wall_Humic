@@ -6,8 +6,10 @@ import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
 
 import { useListNotes } from '../../hooks/useListNotes';
+import { listNotesAPI } from '../../lib/api';
 import Layout from '../../components/Layout';
 import ImageViewer from '../../components/ImageViewer';
+import GuestWarningModal from '../../components/GuestWarningModal';
 
 
 export default function NotesListPage() {
@@ -27,9 +29,17 @@ export default function NotesListPage() {
     isOpen: false,
     imageUrl: ''
   });
+  const [guestWarningModal, setGuestWarningModal] = useState({
+    isOpen: false,
+    message: ''
+  });
   
   
-  const itemsPerPage = 9; // Changed to 15 for masonry layout
+  const isAuthenticated = () => {
+    return !!localStorage.getItem('token_community-feedback');
+  };
+  
+  const itemsPerPage = 9;
   const colors = [
     '#E4CF7C',
     '#E5B9BE',
@@ -83,7 +93,6 @@ export default function NotesListPage() {
     const matchesSearch = note.title?.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesSearch;
   });
-  
   // Masonry Layout: Distribute notes into 3 columns based on height
   const distributeNotesToColumns = (notes) => {
     const columns = [[], [], []]; // 3 columns
@@ -111,9 +120,7 @@ export default function NotesListPage() {
     
     return columns;
   };
-  
   const noteColumns = distributeNotesToColumns(filteredNotes);
-  
   const goToPage = (page) => {
     if (page >= 1 && page <= (pagination?.last_page || 1)) {
       const params = {
@@ -151,12 +158,35 @@ export default function NotesListPage() {
     const end = format(dateRange[0].endDate, 'dd MMM yyyy');
     return start === end ? start : `${start} - ${end}`;
   };
-  
   const handleImageClick = (imageUrl) => {
     setImageViewer({
       isOpen: true,
       imageUrl: imageUrl
     });
+  };
+  const handleReactionClick = async (noteId, reactionType) => {
+    if (!isAuthenticated()) {
+      setGuestWarningModal({
+        isOpen: true,
+        message: 'Please login to react to notes'
+      });
+      return;
+    }
+    
+    try {
+      await listNotesAPI.toggleReaction(noteId, reactionType);
+      // Refresh notes after reaction
+      const params = {
+        filter: currentFilter === 'toplike' ? 'top_like' : 'newest',
+        page: pagination?.current_page || 1,
+        per_page: itemsPerPage,
+        from_date: format(dateRange[0].startDate, 'yyyy-MM-dd'),
+        to_date: format(dateRange[0].endDate, 'yyyy-MM-dd')
+      };
+      fetchNotes(params);
+    } catch (error) {
+      console.error('Error toggling reaction:', error);
+    }
   };
 
   return (
@@ -306,21 +336,56 @@ export default function NotesListPage() {
                       <div className="relative z-10 flex items-center justify-start">
                         {/* Reactions with background */}
                         <div className="flex items-center gap-2">
-                          <span className="flex items-center gap-1 px-2 py-1 text-xs bg-white rounded-full">
+                          <button
+                            onClick={() => handleReactionClick(note.id, 'heart')}
+                            className={`flex items-center gap-1 px-2 py-1 text-xs transition-all rounded-full cursor-pointer ${
+                              note.userReactions?.includes('heart')
+                                ? 'bg-red-100 border border-red-300'
+                                : 'bg-white hover:bg-gray-100'
+                            }`}
+                          >
                             ❤️ <span className="font-medium text-gray-700">{note.reactions?.heart || 0}</span>
-                          </span>
-                          <span className="flex items-center gap-1 px-2 py-1 text-xs bg-white rounded-full">
+                          </button>
+                          <button
+                            onClick={() => handleReactionClick(note.id, 'like')}
+                            className={`flex items-center gap-1 px-2 py-1 text-xs transition-all rounded-full cursor-pointer ${
+                              note.userReactions?.includes('like')
+                                ? 'bg-blue-100 border border-blue-300'
+                                : 'bg-white hover:bg-gray-100'
+                            }`}
+                          >
                             👍 <span className="font-medium text-gray-700">{note.reactions?.like || 0}</span>
-                          </span>
-                          <span className="flex items-center gap-1 px-2 py-1 text-xs bg-white rounded-full">
+                          </button>
+                          <button
+                            onClick={() => handleReactionClick(note.id, 'laugh')}
+                            className={`flex items-center gap-1 px-2 py-1 text-xs transition-all rounded-full cursor-pointer ${
+                              note.userReactions?.includes('laugh')
+                                ? 'bg-yellow-100 border border-yellow-300'
+                                : 'bg-white hover:bg-gray-100'
+                            }`}
+                          >
                             😂 <span className="font-medium text-gray-700">{note.reactions?.laugh || 0}</span>
-                          </span>
-                          <span className="flex items-center gap-1 px-2 py-1 text-xs bg-white rounded-full">
+                          </button>
+                          <button
+                            onClick={() => handleReactionClick(note.id, 'surprised')}
+                            className={`flex items-center gap-1 px-2 py-1 text-xs transition-all rounded-full cursor-pointer ${
+                              note.userReactions?.includes('surprised')
+                                ? 'bg-purple-100 border border-purple-300'
+                                : 'bg-white hover:bg-gray-100'
+                            }`}
+                          >
                             😊 <span className="font-medium text-gray-700">{note.reactions?.surprised || 0}</span>
-                          </span>
-                          <span className="flex items-center gap-1 px-2 py-1 text-xs bg-white rounded-full">
+                          </button>
+                          <button
+                            onClick={() => handleReactionClick(note.id, 'fire')}
+                            className={`flex items-center gap-1 px-2 py-1 text-xs transition-all rounded-full cursor-pointer ${
+                              note.userReactions?.includes('fire')
+                                ? 'bg-orange-100 border border-orange-300'
+                                : 'bg-white hover:bg-gray-100'
+                            }`}
+                          >
                             🔥 <span className="font-medium text-gray-700">{note.reactions?.fire || 0}</span>
-                          </span>
+                          </button>
                         </div>
                       </div>
                       {/* Date */}
@@ -387,6 +452,12 @@ export default function NotesListPage() {
         isOpen={imageViewer.isOpen}
         imageUrl={imageViewer.imageUrl}
         onClose={() => setImageViewer({ isOpen: false, imageUrl: '' })}
+      />
+      {/* Guest Warning Modal */}
+      <GuestWarningModal
+        isOpen={guestWarningModal.isOpen}
+        onClose={() => setGuestWarningModal({ isOpen: false, message: '' })}
+        message={guestWarningModal.message}
       />
     </Layout>
   );

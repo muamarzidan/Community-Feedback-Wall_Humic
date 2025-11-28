@@ -7,7 +7,19 @@ import { formatDate } from '../utils/formatDate.js';
 
 
 
-const SvgIcon = ({ svg, x, y, size = 12, onClick, cursorMode }) => {
+const svgEdit = `
+<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+  <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/>
+  <path d="m15 5 4 4" />
+</svg>
+`;
+
+const svgDelete = `
+<svg stroke="#ffffff" fill="#ffffff" stroke-width="0" viewBox="0 0 16 16" height="200px" width="200px" xmlns="http://www.w3.org/2000/svg"><path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5" />
+</svg>
+`;
+
+const SvgIcon = ({ svg, x, y, size = 12, onClick, cursorMode, onMouseEnter, onMouseLeave }) => {
   const [icon] = useImage(
     `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`
   );
@@ -22,23 +34,12 @@ const SvgIcon = ({ svg, x, y, size = 12, onClick, cursorMode }) => {
         height={size}
         onClick={onClick}
         onTap={onClick}
-        listening={cursorMode === 'default'}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
       />
     )
   );
 };
-
-const svgEdit = `
-<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
-  <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/>
-  <path d="m15 5 4 4" />
-</svg>
-`;
-
-const svgDelete = `
-<svg stroke="#ffffff" fill="#ffffff" stroke-width="0" viewBox="0 0 16 16" height="200px" width="200px" xmlns="http://www.w3.org/2000/svg"><path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5" />
-</svg>
-`;
 
 const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, onImageClick, cursorMode = 'drag' }) => {
   const [image] = useImage(note.image);
@@ -46,10 +47,11 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, on
   const isAuthenticated = () => {
     return !!localStorage.getItem('token_community-feedback');
   };
+
   const handleImageMouseEnter = (e) => {
     const stage = e.target.getStage();
     if (stage) {
-      stage.container().style.cursor = cursorMode === 'drag' ? 'grab' : 'pointer';
+      stage.container().style.cursor = 'pointer';
     };
   };
   const handleImageMouseLeave = (e) => {
@@ -61,7 +63,7 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, on
   const handleButtonMouseEnter = (e) => {
     const stage = e.target.getStage();
     if (stage) {
-      stage.container().style.cursor = cursorMode === 'drag' ? 'grab' : 'pointer';
+      stage.container().style.cursor = 'pointer';
     };
   };
   const handleButtonMouseLeave = (e) => {
@@ -182,11 +184,12 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, on
   }, [dimensions, isOwner, padding]);
   const handleReactionClick = useCallback((reactionType, e) => {
     e.cancelBubble = true;
-    if (cursorMode === 'default') {
+    const stage = e.target.getStage();
+    if (cursorMode === 'default' || stage.container().style.cursor === 'pointer') {
       if (!isAuthenticated()) {
         if (onGuestWarning) {
           onGuestWarning('Please login to react to notes');
-        }
+        };
         return;
       };
       
@@ -197,13 +200,15 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, on
   }, [note.id, onReactionUpdate, onGuestWarning, cursorMode]);
   const handleEditClick = useCallback((e) => {
     e.cancelBubble = true;
-    if (cursorMode === 'default') {
+    const stage = e.target.getStage();
+    if (cursorMode === 'default' || stage.container().style.cursor === 'pointer') {
       onEdit();
     };
   }, [onEdit, cursorMode]);
   const handleDeleteClick = useCallback((e) => {
     e.cancelBubble = true;
-    if (cursorMode === 'default') {
+    const stage = e.target.getStage();
+    if (cursorMode === 'default' || stage.container().style.cursor === 'pointer') {
       onDelete();
     };
   }, [onDelete, cursorMode]);
@@ -298,7 +303,6 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, on
               onTap={handleEditClick}
               onMouseEnter={handleButtonMouseEnter}
               onMouseLeave={handleButtonMouseLeave}
-              listening={cursorMode === 'default'}
             />
             <SvgIcon
               svg={svgEdit}
@@ -307,6 +311,8 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, on
               size={17}
               onClick={handleEditClick}
               cursorMode={cursorMode}
+              onMouseEnter={handleButtonMouseEnter}
+              onMouseLeave={handleButtonMouseLeave}
             />
             {/* Delete Button */}
             <Rect
@@ -320,7 +326,6 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, on
               onTap={handleDeleteClick}
               onMouseEnter={handleButtonMouseEnter}
               onMouseLeave={handleButtonMouseLeave}
-              listening={cursorMode === 'default'}
             />
             <SvgIcon
               svg={svgDelete}
@@ -329,6 +334,8 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, on
               size={16}
               onClick={handleDeleteClick}
               cursorMode={cursorMode}
+              onMouseEnter={handleButtonMouseEnter}
+              onMouseLeave={handleButtonMouseLeave}
             />
           </Group>
         )}
@@ -360,21 +367,21 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, on
             width={contentWidth}
             height={176}
             cornerRadius={8}
-            fill="#f0f0f0"
+            fill="#FFFFFFFF"
           />
           <Image
             x={padding + 2}
             y={imageY + 2}
             image={image}
-            width={contentWidth - 4}
+            width={contentWidth}
             height={172}
             cornerRadius={6}
             crop={(() => {
-              // Calculate object-fit: cover crop
               const imgWidth = image.width;
               const imgHeight = image.height;
-              const targetWidth = contentWidth - 4;
+              const targetWidth = contentWidth;
               const targetHeight = 172;
+              
               const imgRatio = imgWidth / imgHeight;
               const targetRatio = targetWidth / targetHeight;
               
@@ -431,7 +438,9 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, on
                 strokeWidth={1}
                 onClick={(e) => handleReactionClick(reaction.type, e)}
                 onTap={(e) => handleReactionClick(reaction.type, e)}
-                listening={cursorMode === 'default'}
+                onMouseEnter={handleButtonMouseEnter}
+                onMouseLeave={handleButtonMouseLeave}
+                // listening={cursorMode === 'default'}
               />
               
               {/* Reaction Emoji */}
@@ -442,7 +451,9 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, on
                 fontSize={16}
                 onClick={(e) => handleReactionClick(reaction.type, e)}
                 onTap={(e) => handleReactionClick(reaction.type, e)}
-                listening={cursorMode === 'default'}
+                onMouseEnter={handleButtonMouseEnter}
+                onMouseLeave={handleButtonMouseLeave}
+                // listening={cursorMode === 'default'}
               />
               
               {/* Reaction Count */}
@@ -455,7 +466,9 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, on
                 fontStyle="bold"
                 onClick={(e) => handleReactionClick(reaction.type, e)}
                 onTap={(e) => handleReactionClick(reaction.type, e)}
-                listening={cursorMode === 'default'}
+                onMouseEnter={handleButtonMouseEnter}
+                onMouseLeave={handleButtonMouseLeave}
+                // listening={cursorMode === 'default'}
               />
             </Group>
           );
