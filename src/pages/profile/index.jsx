@@ -7,7 +7,7 @@ import { FiEdit3 } from "react-icons/fi";
 import { MdLock } from "react-icons/md";
 import toast from "react-hot-toast";
 
-import { userAPI, authAPI } from "../../lib/api";
+import { userAPI, authAPI, adminApi } from "../../lib/api";
 import Layout from "../../components/Layout";
 import UpdatePasswordModal from "../../components/UpdatePasswordModal";
 
@@ -36,18 +36,17 @@ export default function ProfilePage() {
         };
         fetchUserData();
     }, []);
+    
     const handleEditClick = (field, currentValue) => {
         setEditingField(field);
         setEditValue(currentValue);
         setUpdateMessage({ type: '', text: '' });
     };
-
     const handleCancelEdit = () => {
         setEditingField(null);
         setEditValue('');
         setUpdateMessage({ type: '', text: '' });
     };
-
     const handleSaveEdit = async (field) => {
         if (!editValue.trim()) {
             setUpdateMessage({ type: 'error', text: 'Field cannot be empty' });
@@ -82,7 +81,6 @@ export default function ProfilePage() {
             setUpdateLoading(false);
         }
     };
-
     const handleLogout = async () => {
         try {
             setIsDataLoading(true);
@@ -100,6 +98,41 @@ export default function ProfilePage() {
             setIsDataLoading(false);
         };
     };
+    const handleExportData = async () => {
+        try {
+            const response = await adminApi.getDataExcel();
+            
+            // Get CSV data from response
+            const csvData = response.data;
+            
+            // Create blob from CSV data
+            const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+            
+            // Create download link
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            // Set filename with current date
+            const date = new Date().toISOString().split('T')[0];
+            link.setAttribute('href', url);
+            link.setAttribute('download', `notes-export-${date}.csv`);
+            
+            // Trigger download
+            document.body.appendChild(link);
+            link.click();
+            
+            // Cleanup
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            console.log("Data exported successfully");
+        } catch (error) {
+            console.error("Data export failed:", error);
+            alert("Data export failed. Please try again.");
+        }
+    };
+
+    
     return (
         <Layout>
             <div className="min-h-screen px-6 py-16 bg-gray-50">
@@ -119,7 +152,6 @@ export default function ProfilePage() {
                     {/* Personal Information */}
                     <div className="flex flex-col gap-2 bg-transparent border-0 border-gray-300 sm:gap-4 sm:border sm:bg-white sm:p-6 rounded-xl sm:rounded-2xl">
                         <h3 className="text-sm font-semibold text-black sm:text-2xl">Personal Information</h3>
-                        
                         {/* Update Message */}
                         {updateMessage.text && (
                             <div className={`p-3 rounded-lg text-sm ${
@@ -217,12 +249,16 @@ export default function ProfilePage() {
                                 <div className="flex flex-col">
                                     <p className="text-base font-semibold text-black">Password</p>
                                     <p className="text-base text-gray-600">
-                                        Last modified 30 days ago
+                                        {
+                                            userData?.updated_at
+                                                ? `Last modified ${new Date(userData.updated_at).toLocaleDateString()}`
+                                                : 'Never updated'
+                                        }
                                     </p>
                                 </div>
                                 <button 
                                     onClick={() => setIsPasswordModalOpen(true)}
-                                    className="flex justify-center px-4 py-2 font-medium text-white transition-colors rounded-lg cursor-pointer h-fit sm:hidden bg-primary-500 hover:bg-primary-700"
+                                    className="flex px-4 py-2 font-medium text-white transition-colors rounded-lg cursor-pointer justify- center h-fit sm:hidden bg-primary-500 hover:bg-primary-700"
                                 >
                                     Change
                                 </button>
@@ -257,26 +293,30 @@ export default function ProfilePage() {
                         </Link>
                     </div>
                     {/* Export data */}
-                    <div className="flex flex-col p-0 bg-transparent border-gray-200 sm:p-4 border-non sm:border sm:flex-row sm:justify-between sm:items-start rounded-2xl sm:bg-white">
-                        <div className="flex flex-col w-full">
-                            <div className="flex items-start justify-between">
-                                <h3 className="text-lg font-semibold text-black sm:text-xl">Data Export</h3>
-                                <p className="text-sm text-gray-500 sm:text-base">Admin only</p>
-                            </div>
-                            <div className="flex flex-col gap-3 p-4 mt-3 bg-transparent border border-gray-300 sm:bg-gray-100 sm:mt-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:border-0 rounded-xl">
-                                <div className="flex flex-col">
-                                    <p className="text-base font-semibold text-black">Export Data</p>
-                                    <p className="text-sm text-gray-600 sm:text-base">
-                                        Download all feedback data (.csv)
-                                    </p>
+                    {
+                        userData?.role === 'admin' && (
+                            <div className="flex flex-col p-0 bg-transparent border-gray-200 sm:p-4 border-non sm:border sm:flex-row sm:justify-between sm:items-start rounded-2xl sm:bg-white">
+                                <div className="flex flex-col w-full">
+                                    <div className="flex items-start justify-between">
+                                        <h3 className="text-lg font-semibold text-black sm:text-xl">Data Export</h3>
+                                        <p className="text-sm text-gray-500 sm:text-base">Admin only</p>
+                                    </div>
+                                    <div className="flex flex-col gap-3 p-4 mt-3 bg-transparent border border-gray-300 sm:bg-gray-100 sm:mt-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:border-0 rounded-xl">
+                                        <div className="flex flex-col">
+                                            <p className="text-base font-semibold text-black">Export Data</p>
+                                            <p className="text-sm text-gray-600 sm:text-base">
+                                                Download all feedback data (.csv)
+                                            </p>
+                                        </div>
+                                        <button onClick={handleExportData} className="flex items-center justify-center w-full gap-2 px-4 py-3 font-medium text-white transition-colors rounded-lg cursor-pointer bg-gray-950 hover:bg-gray-900 sm:w-auto">
+                                            <TiExport className="w-5 h-5" />
+                                            Export Data
+                                        </button>
+                                    </div>
                                 </div>
-                                <button className="flex items-center justify-center w-full gap-2 px-4 py-3 font-medium text-white transition-colors rounded-lg cursor-pointer bg-gray-950 hover:bg-gray-900 sm:w-auto">
-                                    <TiExport className="w-5 h-5" />
-                                    Export Data
-                                </button>
                             </div>
-                        </div>
-                    </div>
+                        )
+                    }
                     {/* Logout */}
                     <div className="flex justify-end" onClick={handleLogout}>
                         <button className="flex items-center gap-2 px-5 py-2 font-medium text-white transition bg-red-500 rounded-lg cursor-pointer hover:bg-red-800">
@@ -286,7 +326,6 @@ export default function ProfilePage() {
                     </div>
                 </div>
             </div>
-
             {/* Password Modal */}
             <UpdatePasswordModal 
                 isOpen={isPasswordModalOpen} 

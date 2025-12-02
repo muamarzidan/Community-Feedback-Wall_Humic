@@ -40,7 +40,7 @@ export const CursorModeProvider = ({ children }) => {
       setCursorModeState('default');
       // Force default cursor on body for non-canvas pages
       document.body.style.cursor = 'default';
-    }
+    };
     
     // Cleanup
     return () => {

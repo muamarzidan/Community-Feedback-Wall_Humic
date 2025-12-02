@@ -145,16 +145,15 @@ export const useCanvasNotes = () => {
   };
   const addNote = async (noteData) => {
     try {
-      // Check guest limitations
       if (!isAuthenticated()) {
         if (!canGuestCreateNote()) {
           throw new Error('Guest can only create 1 note per day');
         };
-        // Email wajib untuk guest
+        // Email is required for guest
         if (!noteData.email) {
           throw new Error('Email is required for guest users');
         };
-        // Guest tidak bisa upload image
+        // Guest cannot upload images
         if (noteData.image) {
           throw new Error('Guest users cannot upload images');
         };
@@ -165,7 +164,6 @@ export const useCanvasNotes = () => {
         description: noteData.description,
         color: noteData.backgroundColor?.replace('#', '') || 'fef3c7',
       };
-
       // Add email for guest
       if (!isAuthenticated() && noteData.email) {
         apiData.email = noteData.email;
@@ -177,7 +175,7 @@ export const useCanvasNotes = () => {
 
       const response = await canvasNotesAPI.createNote(apiData);
       if (response.data) {
-        // Update guest timestamp
+        // Update guest timestamp for 1 note per day limit
         if (!isAuthenticated()) {
           localStorage.setItem(GUEST_STORAGE_KEY, Date.now().toString());
         };
@@ -188,7 +186,7 @@ export const useCanvasNotes = () => {
     } catch (err) {
       console.error('Error creating note:', err);
       throw err;
-    }
+    };
   };
   const updateNote = async (noteId, noteData) => {
     try {

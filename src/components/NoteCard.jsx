@@ -246,10 +246,6 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, on
   const descY = imageY + (dimensions.imageHeight > 0 ? dimensions.imageHeight + 12 : 0);
   const reactionsY = descY + (dimensions.descHeight > 0 ? dimensions.descHeight + 12 : 0);
   const dateY = reactionsY + 26 + 20;
-  // const descY = titleY + dimensions.titleHeight + 8;
-  // const imageY = descY + dimensions.descHeight + 12;
-  // const reactionsY = imageY + (dimensions.imageHeight > 0 ? dimensions.imageHeight + 10 : 0);
-  // const dateY = reactionsY + 26 + 8;
 
   return (
     <Group x={note.x} y={note.y}>

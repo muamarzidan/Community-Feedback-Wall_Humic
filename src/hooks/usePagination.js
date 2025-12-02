@@ -6,7 +6,6 @@ export const usePagination = (items, itemsPerPage = 5) => {
   const totalPages = Math.ceil(items.length / itemsPerPage);
 
   const paginatedItems = useMemo(() => {
-    // Sort items by createdAt descending (newest first)
     const sortedItems = [...items].sort((a, b) => 
       new Date(b.createdAt) - new Date(a.createdAt)
     );
@@ -21,11 +20,9 @@ export const usePagination = (items, itemsPerPage = 5) => {
       setCurrentPage(page);
     }
   };
-
   const goToNextPage = () => {
     goToPage(currentPage + 1);
   };
-
   const goToPrevPage = () => {
     goToPage(currentPage - 1);
   };
@@ -33,7 +30,7 @@ export const usePagination = (items, itemsPerPage = 5) => {
   // Reset to page 1 if current page is beyond total pages
   if (currentPage > totalPages && totalPages > 0) {
     setCurrentPage(1);
-  }
+  };
 
   const resetToFirstPage = () => {
     setCurrentPage(1);

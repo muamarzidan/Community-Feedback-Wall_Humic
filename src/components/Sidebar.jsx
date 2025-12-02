@@ -32,6 +32,12 @@ const Sidebar = () => {
             path: '/notes',
             active: location.pathname === '/notes'
         },
+        ...(isAuthenticated ? [{
+            icon: ListIcon,
+            label: 'My Notes',
+            path: '/my-notes',
+            active: location.pathname === '/my-notes'
+        }] : []),
         {
             icon: AboutIcon,
             label: 'About',

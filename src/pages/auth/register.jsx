@@ -39,12 +39,10 @@ export default function SignUpPage() {
         });
         setError('');
     };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
 
-        // Validation
         if (formData.password !== formData.password_confirmation) {
             setError('Password dan konfirmasi password tidak cocok');
             return;
@@ -58,13 +56,14 @@ export default function SignUpPage() {
                 navigate('/');
             } else {
                 setError(result.message);
-            }
+            };
         } catch (err) {
             setError('Terjadi kesalahan. Silakan coba lagi.');
         } finally {
             setLoading(false);
-        }
+        };
     };
+    
     return (
         <div className="flex items-center justify-center min-h-screen bg-white">
             <div className="flex w-full max-w-5xl overflow-hidden rounded-2xl">

@@ -48,12 +48,12 @@ export default function LoginPage() {
                 navigate('/');
             } else {
                 setError(result.message);
-            }
+            };
         } catch (err) {
             setError('Terjadi kesalahan. Silakan coba lagi.');
         } finally {
             setLoading(false);
-        }
+        };
     };
     
     return (

@@ -50,6 +50,20 @@ export const userAPI = {
   getUser: () => api.get('/api/user'),
   updateProfile: (userData) => api.put('/api/profile', userData),
   updatePassword: (passwordData) => api.put('/api/password', passwordData),
+  getMyNotes: (params = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('page', params.page);
+    if (params.per_page) queryParams.append('per_page', params.per_page);
+    if (params.sort) queryParams.append('sort', params.sort);
+    return api.get(`/api/notes/my-notes?${queryParams.toString()}`);
+  },
+  getMyReactions: (params = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('page', params.page);
+    if (params.per_page) queryParams.append('per_page', params.per_page);
+    if (params.reaction_type) queryParams.append('reaction_type', params.reaction_type);
+    return api.get(`/api/notes/my-reactions?${queryParams.toString()}`);
+  },
 };
 export const canvasNotesAPI = {
   getCanvasNotes: (canvasId = 1) => api.get(`/api/canvas/${canvasId}/notes`),
@@ -59,11 +73,9 @@ export const canvasNotesAPI = {
     formData.append('title', noteData.title);
     formData.append('description', noteData.description);
     formData.append('color', noteData.color);
-    // Email wajib untuk guest (tidak terautentikasi)
     if (noteData.email) {
       formData.append('email', noteData.email);
     };
-    // Image hanya untuk authenticated users
     if (noteData.image instanceof File) {
       formData.append('image', noteData.image);
     };
@@ -101,7 +113,6 @@ export const listNotesAPI = {
   getAllNotes: () => api.get('/api/notes'),
   getFilteredNotes: (params = {}) => {
     const queryParams = new URLSearchParams();
-    
     if (params.filter) queryParams.append('filter', params.filter); // 'top_like' or 'newest'
     if (params.page) queryParams.append('page', params.page);
     if (params.per_page) queryParams.append('per_page', params.per_page);
@@ -111,6 +122,12 @@ export const listNotesAPI = {
     return api.get(`/api/notes/filter?${queryParams.toString()}`);
   },
   getNoteById: (noteId) => api.get(`/api/notes/${noteId}`),
+  toggleReaction: (noteId, reactionType) => 
+    api.post(`/api/notes/${noteId}/reaction`, { reaction_type: reactionType }),
 };
-
+export const adminApi = {
+  getDataExcel: () => api.get('/api/notes/export/csv', { 
+    responseType: 'text' // CSV is text format
+  }),
+};
 export default api;

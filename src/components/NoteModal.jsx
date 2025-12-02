@@ -116,7 +116,7 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 transition-colors hover:text-gray-600"
+            className="text-gray-400 transition-colors cursor-pointer hover:text-gray-600"
           >
             <X className="w-6 h-6" />
           </button>
@@ -189,8 +189,6 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
               ))}
             </div>
           </div>
-
-          {/* Image Upload (Only for authenticated users) */}
           {isAuthenticated() && (
             <div>
               <label className="block mb-2 text-sm font-medium text-gray-700">
@@ -237,7 +235,7 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
               )}
             </div>
           )}
-          {/* Buttons */}
+          {/* Action Buttons */}
           <div className="flex gap-3 pt-4">
             <button
               type="button"

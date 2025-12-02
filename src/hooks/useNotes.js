@@ -25,7 +25,6 @@ export const useNotes = () => {
     return daysDiff >= 1;
   };
 
-  // Load notes from API on mount
   useEffect(() => {
     fetchNotes();
   }, []);
@@ -206,7 +205,7 @@ export const useNotes = () => {
               },
               userReactions: response.data.data.user_reactions || [],
             };
-          }
+          };
           return note;
         }));
       };

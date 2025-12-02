@@ -34,10 +34,10 @@ export const AuthProvider = ({ children }) => {
             } catch (error) {
                 localStorage.removeItem('user-data_community-feedback');
                 setLoading(false);
-            }
+            };
         } else {
             setLoading(false);
-        }
+        };
     }, []);
 
     const login = async (credentials) => {
@@ -53,7 +53,7 @@ export const AuthProvider = ({ children }) => {
         } catch (error) {
             const errorMessage = error.response?.data?.message || 'Login gagal. Silakan coba lagi.';
             return { success: false, message: errorMessage };
-        }
+        };
     };
     const register = async (userData) => {
         try {
@@ -68,7 +68,7 @@ export const AuthProvider = ({ children }) => {
         } catch (error) {
             const errorMessage = error.response?.data?.message || 'Registrasi gagal. Silakan coba lagi.';
             return { success: false, message: errorMessage };
-        }
+        };
     };
     const logout = async () => {
         try {
@@ -80,7 +80,7 @@ export const AuthProvider = ({ children }) => {
             localStorage.removeItem('user-data_community-feedback');
             setUser(null);
             navigate('/login');
-        }
+        };
     };
     const updateUserData = (updatedUser) => {
         setUser(updatedUser);

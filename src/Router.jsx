@@ -9,6 +9,7 @@ import SignUpPage from './pages/auth/register.jsx';
 import ProfilePage from './pages/profile/index.jsx';
 import AboutPage from './pages/about/index.jsx';
 import NotesListPage from './pages/notes/index.jsx';
+import MyNotesPage from './pages/my-notes/index.jsx';
 
 
 const PrivateRoute = ({ children }) => {
@@ -47,6 +48,14 @@ function RouterContent() {
         <Route path="/" element={<App />} />
         <Route path="/notes" element={<NotesListPage />} />
         <Route path="/about" element={<AboutPage />} />
+        <Route 
+          path="/my-notes" 
+          element={
+            <PrivateRoute>
+              <MyNotesPage />
+            </PrivateRoute>
+          } 
+        />
         <Route 
           path="/profile" 
           element={

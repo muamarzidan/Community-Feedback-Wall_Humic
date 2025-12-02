@@ -58,10 +58,8 @@ export const useListNotes = () => {
   const transformNoteFromAPI = (apiNote) => {
     const currentUser = getCurrentUser();
     
-    // Determine user type
     let userType = 'guest';
     let authorName = 'Guest';
-    
     if (apiNote.user) {
       authorName = apiNote.user.name;
       if (currentUser && apiNote.user.id === currentUser.id) {
@@ -72,7 +70,6 @@ export const useListNotes = () => {
     } else if (apiNote.guest) {
       userType = 'guest';
       authorName = 'Guest';
-      // Could show email: Guest (email@example.com)
     };
 
     return {
@@ -85,7 +82,7 @@ export const useListNotes = () => {
       userId: apiNote.user?.id || null,
       userType: userType,
       image: apiNote.image || null,
-      likes: Object.values(apiNote.reactions || {}).reduce((sum, val) => sum + val, 0), // Total reactions
+      likes: Object.values(apiNote.reactions || {}).reduce((sum, val) => sum + val, 0),
       reactions: {
         heart: apiNote.reactions?.heart || 0,
         like: apiNote.reactions?.like || 0,
@@ -99,6 +96,24 @@ export const useListNotes = () => {
       updatedAt: apiNote.updated_at,
     };
   };
+  const updateLocalReaction = (noteId, reactionData) => {
+    setNotes(prevNotes => prevNotes.map(note => {
+      if (note.id === noteId) {
+        return {
+          ...note,
+          reactions: {
+            heart: reactionData.reactions?.heart || 0,
+            like: reactionData.reactions?.like || 0,
+            laugh: reactionData.reactions?.laugh || 0,
+            surprised: reactionData.reactions?.surprised || 0,
+            fire: reactionData.reactions?.fire || 0,
+          },
+          userReactions: reactionData.user_reactions || [],
+        };
+      };
+      return note;
+    }));
+  };
 
   return {
     notes,
@@ -107,6 +122,7 @@ export const useListNotes = () => {
     loading,
     error,
     fetchNotes,
+    updateLocalReaction,
     isAuthenticated,
   };
 };
