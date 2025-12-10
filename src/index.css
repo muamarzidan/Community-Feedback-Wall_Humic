@@ -24,7 +24,11 @@ body {
 
 html, body {
     overflow-x: hidden;
-    overflow-y: auto;
+}
+
+/* Prevent scrolling on canvas page */
+body:has(.canvas-page) {
+    overflow: hidden;
 }
 
 /* Custom styling for react-date-range */

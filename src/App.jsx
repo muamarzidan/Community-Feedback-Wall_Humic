@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 
-import { usePagination } from './hooks/usePagination';
 import { useCursorMode } from './contexts/CursorModeContext';
 import { useCanvasNotes } from './hooks/useCanvasNotes';
 import { closeAllMenus } from './utils/domUtils';
@@ -19,10 +18,23 @@ import './App.css';
 
 
 function App() {
-  const { notes, 
-    // canvasInfo, 
-    addNote, updateNote, deleteNote, updateReaction, loading, isAuthenticated, canGuestCreateNote } = useCanvasNotes();
-  const { currentPage, totalPages, paginatedItems, goToPage, resetToFirstPage } = usePagination(notes, 50);
+  const { 
+    notes, 
+    canvasInfo,
+    currentCanvasId,
+    navigation,
+    addNote, 
+    updateNote, 
+    deleteNote, 
+    updateReaction, 
+    loading, 
+    isAuthenticated, 
+    canGuestCreateNote,
+    goToCanvas,
+    goToPreviousCanvas,
+    goToNextCanvas,
+    goToCurrentActiveCanvas
+  } = useCanvasNotes();
   const { cursorMode, setCursorMode } = useCursorMode();
   const [zoom, setZoom] = useState(1);
   const [dimensions, setDimensions] = useState({
@@ -104,8 +116,6 @@ function App() {
           message: 'Note created successfully!',
           type: 'success'
         });
-        // Navigate to page 1 to show the new note
-        setTimeout(() => resetToFirstPage(), 100);
       };
       
       setModalState({
@@ -194,7 +204,7 @@ function App() {
       ) : (
         <div className="relative w-full h-screen overflow-hidden bg-center bg-cover canvas-page bg-gray-50">
           <NotesCanvas
-            notes={paginatedItems}
+            notes={notes}
             zoom={zoom}
             cursorMode={cursorMode}
             width={dimensions.width}
@@ -207,15 +217,18 @@ function App() {
             onImageClick={handleImageClick}
           />
         {/* Pagination */}
-        <div className="absolute z-50 transform -translate-x-1/2 bottom-20 sm:bottom-6 left-1/2">
+        <div className="absolute z-50 flex justify-center w-full transform -translate-x-1/2 bottom-20 sm:bottom-6 left-1/2">
           <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={goToPage}
+            currentCanvasId={currentCanvasId}
+            navigation={navigation}
+            onCanvasChange={goToCanvas}
+            onPrevious={goToPreviousCanvas}
+            onNext={goToNextCanvas}
+            onGoToCurrent={goToCurrentActiveCanvas}
           />
         </div>
         {/* Cursor Mode */}
-        <div className="absolute z-50 flex flex-col gap-3 right-6 top-4 sm:right-32 sm:top-6">
+        <div className="absolute z-50 flex flex-col gap-3 right-4 top-4 sm:right-32 sm:top-6">
           <CursorModeToggle 
             cursorMode={cursorMode}
             onModeChange={(newMode) => {
@@ -226,7 +239,7 @@ function App() {
           />
         </div>
         {/* Zoom Control */}
-        <div className="absolute z-50 right-6 bottom-50 sm:bottom-24 sm:right-32">
+        <div className="absolute z-50 right-4 bottom-54 sm:bottom-24 sm:right-32">
           <ZoomControls
             zoom={zoom}
             onZoomIn={handleZoomIn}
@@ -234,7 +247,7 @@ function App() {
           />
         </div>
         {/* Create Note */}
-        <div className="absolute z-50 flex flex-col gap-3 right-7 bottom-36 sm:bottom-6 sm:right-32">
+        <div className="absolute z-50 flex flex-col gap-3 right-5 bottom-40 sm:bottom-6 sm:right-32">
           <CreateNoteButton onClick={handleCreateNote} />
         </div>
         </div>

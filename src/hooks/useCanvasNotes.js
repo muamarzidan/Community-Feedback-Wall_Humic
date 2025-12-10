@@ -5,11 +5,12 @@ import { canvasNotesAPI } from '../lib/api.js';
 
 
 const GUEST_STORAGE_KEY = 'guest-note-timestamp';
-const CANVAS_ID = 1;
 
 export const useCanvasNotes = () => {
   const [notes, setNotes] = useState([]);
   const [canvasInfo, setCanvasInfo] = useState(null);
+  const [currentCanvasId, setCurrentCanvasId] = useState(null);
+  const [navigation, setNavigation] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -29,35 +30,92 @@ export const useCanvasNotes = () => {
   };
 
   useEffect(() => {
-    fetchNotes();
+    fetchCurrentCanvas();
   }, []);
 
-  const fetchNotes = async () => {
+  const fetchCurrentCanvas = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await canvasNotesAPI.getCanvasNotes(CANVAS_ID);
+      const response = await canvasNotesAPI.getCurrentCanvasNotes();
       if (response.data && response.data.data) {
-        const apiNotes = response.data.data.notes || [];
-        const canvasCount = response.data.data.canvas_count || response.data.data.canvases?.[0]?.current_count;
-        const grid = response.data.data.grid;
+        const data = response.data.data;
+        const apiNotes = data.notes || [];
         
+        setCurrentCanvasId(data.canvas_id);
         setCanvasInfo({
-          canvasId: CANVAS_ID,
-          canvasCount: canvasCount,
-          grid: grid
+          canvasId: data.canvas_id,
+          grid: data.grid,
         });
         
-        // Transform API data dengan grid positioning
+        // Transform notes
         const transformedNotes = apiNotes.map((note, index) => 
           transformNoteFromAPI(note, index)
         );
         setNotes(transformedNotes);
+        
+        // Fetch canvas info for navigation
+        fetchCanvasInfo(data.canvas_id);
       }
     } catch (err) {
-      console.error('Error fetching canvas notes:', err);
+      console.error('Error fetching current canvas:', err);
       setError(err.message || 'Failed to fetch notes');
+      setNotes([]);
+    } finally {
+      setLoading(false);
+    };
+  };
+
+  const fetchCanvasInfo = async (canvasId) => {
+    try {
+      const response = await canvasNotesAPI.getCanvasById(canvasId);
+      if (response.data && response.data.data) {
+        const data = response.data.data;
+        setNavigation(data.navigation);
+        setCanvasInfo(prev => ({
+          ...prev,
+          notesCount: data.notes_count,
+          currentCount: data.current_count,
+          isFull: data.is_full,
+          remainingSlots: data.remaining_slots,
+          isCurrentActive: data.is_current_active,
+        }));
+      }
+    } catch (err) {
+      console.error('Error fetching canvas info:', err);
+    }
+  };
+
+  const fetchCanvasByID = async (canvasId) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Get notes from specific canvas by ID
+      const notesResponse = await canvasNotesAPI.getCanvasNotesByID(canvasId);
+      if (notesResponse.data && notesResponse.data.data) {
+        const data = notesResponse.data.data;
+        const apiNotes = data.notes || [];
+        
+        setCurrentCanvasId(data.canvas_id);
+        setCanvasInfo({
+          canvasId: data.canvas_id,
+          canvasCount: data.canvas_count,
+          grid: data.grid,
+        });
+        
+        const transformedNotes = apiNotes.map((note, index) => 
+          transformNoteFromAPI(note, index)
+        );
+        setNotes(transformedNotes);
+        
+        // Fetch canvas info for navigation
+        fetchCanvasInfo(canvasId);
+      }
+    } catch (err) {
+      console.error('Error fetching canvas by ID:', err);
+      setError(err.message || 'Failed to fetch canvas');
       setNotes([]);
     } finally {
       setLoading(false);
@@ -180,7 +238,7 @@ export const useCanvasNotes = () => {
           localStorage.setItem(GUEST_STORAGE_KEY, Date.now().toString());
         };
 
-        await fetchNotes();
+        await fetchCurrentCanvas();
         return response.data.data;
       };
     } catch (err) {
@@ -209,7 +267,12 @@ export const useCanvasNotes = () => {
 
       const response = await canvasNotesAPI.updateNote(noteId, apiData);
       if (response.data) {
-        await fetchNotes();
+        // Refresh current canvas or specific canvas
+        if (currentCanvasId) {
+          await fetchCanvasByID(currentCanvasId);
+        } else {
+          await fetchCurrentCanvas();
+        }
         return response.data.data;
       };
     } catch (err) {
@@ -224,7 +287,13 @@ export const useCanvasNotes = () => {
       };
 
       await canvasNotesAPI.deleteNote(noteId);
-      await fetchNotes();
+      
+      // Refresh current canvas or specific canvas
+      if (currentCanvasId) {
+        await fetchCanvasByID(currentCanvasId);
+      } else {
+        await fetchCurrentCanvas();
+      }
     } catch (err) {
       console.error('Error deleting note:', err);
       throw err;
@@ -271,16 +340,47 @@ export const useCanvasNotes = () => {
     };
   };
 
+  // Navigation methods
+  const goToCanvas = (canvasId) => {
+    fetchCanvasByID(canvasId);
+  };
+
+  const goToPreviousCanvas = () => {
+    if (navigation?.previous_canvas) {
+      fetchCanvasByID(navigation.previous_canvas.id);
+    }
+  };
+
+  const goToNextCanvas = () => {
+    if (navigation?.next_canvas) {
+      fetchCanvasByID(navigation.next_canvas.id);
+    }
+  };
+
+  const goToCurrentActiveCanvas = () => {
+    if (navigation?.current_active_canvas) {
+      fetchCanvasByID(navigation.current_active_canvas.id);
+    } else {
+      fetchCurrentCanvas();
+    }
+  };
+
   return {
     notes,
     canvasInfo,
+    currentCanvasId,
+    navigation,
     loading,
     error,
     addNote,
     updateNote,
     deleteNote,
     updateReaction,
-    refreshNotes: fetchNotes,
+    refreshNotes: fetchCurrentCanvas,
+    goToCanvas,
+    goToPreviousCanvas,
+    goToNextCanvas,
+    goToCurrentActiveCanvas,
     canGuestCreateNote,
     isAuthenticated,
   };

@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LogIn, Menu, X } from 'lucide-react';
+import { LogIn, Menu, X, SquareLibrary } from 'lucide-react';
 
 import { useCursorMode } from '../contexts/CursorModeContext';
 import { useAuth } from '../contexts/AuthContext';
 import HomeIcon from '@/assets/icons/home-agora.png';
 import ListIcon from '../assets/icons/listnote-agora.png';
 import AboutIcon from '../assets/icons/about-agora.png';
+import MyNotesIcon from '../assets/icons/mynotes-agora.svg';
 import AuthModal from './AuthModal';
 
 
@@ -33,7 +34,7 @@ const Sidebar = () => {
             active: location.pathname === '/notes'
         },
         ...(isAuthenticated ? [{
-            icon: ListIcon,
+            icon: MyNotesIcon,
             label: 'My Notes',
             path: '/my-notes',
             active: location.pathname === '/my-notes'
@@ -127,6 +128,7 @@ const Sidebar = () => {
                     </Link>
                 )}
             </div>
+            
         </div>
     );
     const MobileNavbar = () => (

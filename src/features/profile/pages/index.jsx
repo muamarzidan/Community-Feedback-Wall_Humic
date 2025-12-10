@@ -10,7 +10,7 @@ import toast from "react-hot-toast";
 import { userAPI, authAPI, adminApi } from "../../lib/api";
 import Layout from "../../components/Layout";
 import UpdatePasswordModal from "../../components/UpdatePasswordModal";
-import photoProfile from "@/assets/icons/photoprofile-agora.webp";
+import photoProfile from "@/assets/images/photoprofile.webp";
 
 
 export default function ProfilePage() {
@@ -147,7 +147,6 @@ export default function ProfilePage() {
                                 alt="Profile Photo - Agora"
                                 className="object-cover w-16 h-16 rounded-full sm:w-24 sm:h-24"
                             />
-                            {/* <div className="w-24 h-24 bg-gray-200 rounded-full" /> */}
                         </div>
                         <div className="w-full sm:mt-6">
                             <p className="text-sm text-gray-500 sm:text-xl">Signed in as</p>
@@ -323,7 +322,7 @@ export default function ProfilePage() {
                             </div>
                         )
                     }
-                    {/* Logout */}
+                    {/* Button Action */}
                     <div className="flex justify-end" onClick={handleLogout}>
                         <button className="flex items-center gap-2 px-5 py-2 font-medium text-white transition bg-red-500 rounded-lg cursor-pointer hover:bg-red-800">
                             <TbLogout2 className="w-5 h-5" />

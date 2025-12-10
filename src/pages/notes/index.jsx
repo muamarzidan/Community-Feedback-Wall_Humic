@@ -5,8 +5,8 @@ import { format } from 'date-fns';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
 
-import { useListNotes } from '../../hooks/useListNotes';
 import { listNotesAPI } from '../../lib/api';
+import { getCurrentUser } from '../../utils/getCurrentUser';
 import { formatDateRange } from '../../utils/formatDate';
 import Layout from '../../components/Layout';
 import ImageViewer from '../../components/ImageViewer';
@@ -14,11 +14,11 @@ import GuestWarningModal from '../../components/GuestWarningModal';
 
 
 export default function NotesListPage() {
-  const { notes, loading, pagination, fetchNotes, updateLocalReaction } = useListNotes();
   const [allNotes, setAllNotes] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentFilter, setCurrentFilter] = useState('today');
   const [topLikeActive, setTopLikeActive] = useState(false);
@@ -31,6 +31,14 @@ export default function NotesListPage() {
       key: 'selection'
     }
   ]);
+  const [tempDateRange, setTempDateRange] = useState([
+    {
+      startDate: new Date(),
+      endDate: new Date(),
+      key: 'selection'
+    }
+  ]);
+  const [hasDateChanged, setHasDateChanged] = useState(false);
   const datePickerRef = useRef(null);
   const scrollContainerRef = useRef(null);
   const [imageViewer, setImageViewer] = useState({
@@ -51,24 +59,96 @@ export default function NotesListPage() {
 
   // Reset notes ketika filter berubah
   useEffect(() => {
+    setAllNotes([]);
     setCurrentPage(1);
     setHasMore(true);
-    // setLoadingMore(true);
     loadNotes(1, true);
   }, [currentFilter, dateRange, topLikeActive]);
-  // Update notes dari hooks ke allNotes
-  useEffect(() => {
-    if (notes.length > 0) {
-      setAllNotes(prev => {
-        if (currentPage === 1) return notes;
-        const existingIds = new Set(prev.map(n => n.id));
-        const newNotes = notes.filter(n => !existingIds.has(n.id));
-        return [...prev, ...newNotes];
-      });
-      setHasMore(pagination?.current_page < pagination?.last_page);
+
+  const loadNotes = async (page = 1, reset = false) => {
+    if (!reset) {
+      setLoadingMore(true);
+    }
+
+    try {
+      const params = {
+        page: page,
+        per_page: itemsPerPage,
+        from_date: format(dateRange[0].startDate, 'yyyy-MM-dd'),
+        to_date: format(dateRange[0].endDate, 'yyyy-MM-dd')
+      };
+      
+      if (topLikeActive) {
+        params.filter = 'top_like';
+      }
+      
+      const response = await listNotesAPI.getFilteredNotes(params);
+      
+      if (response.data && response.data.data) {
+        const data = response.data.data;
+        const transformedNotes = data.notes.map(note => transformNoteFromAPI(note));
+        
+        setAllNotes(prev => {
+          if (page === 1) return transformedNotes;
+          const existingIds = new Set(prev.map(n => n.id));
+          const newNotes = transformedNotes.filter(n => !existingIds.has(n.id));
+          return [...prev, ...newNotes];
+        });
+        
+        setHasMore(data.pagination.current_page < data.pagination.last_page);
+      }
+    } catch (error) {
+      console.error('Error loading notes:', error);
+    } finally {
+      setLoading(false);
       setLoadingMore(false);
     }
-  }, [notes, pagination]);
+  };
+
+  const transformNoteFromAPI = (apiNote) => {
+    const currentUser = getCurrentUser();
+    
+    let userType = 'guest';
+    let authorName = 'Guest';
+    if (apiNote.user) {
+      authorName = apiNote.user.name;
+      if (currentUser && apiNote.user.id === currentUser.id) {
+        userType = 'you';
+      } else {
+        userType = 'people';
+      }
+    }
+
+    return {
+      id: apiNote.id,
+      title: apiNote.title,
+      description: apiNote.description,
+      backgroundColor: apiNote.color ? `#${apiNote.color}` : '#fef3c7',
+      author: authorName,
+      userId: apiNote.user?.id || null,
+      userType: userType,
+      image: apiNote.image || null,
+      reactions: {
+        heart: apiNote.reactions?.heart || 0,
+        like: apiNote.reactions?.like || 0,
+        laugh: apiNote.reactions?.laugh || 0,
+        surprised: apiNote.reactions?.surprised || 0,
+        fire: apiNote.reactions?.fire || 0,
+      },
+      userReactions: apiNote.user_reactions || [],
+      createdAt: apiNote.created_at,
+      updatedAt: apiNote.updated_at,
+    };
+  };
+
+  const loadMore = useCallback(() => {
+    if (!loadingMore && hasMore) {
+      const nextPage = currentPage + 1;
+      setCurrentPage(nextPage);
+      loadNotes(nextPage, false);
+    };
+  }, [currentPage, loadingMore, hasMore, loadNotes]);
+
   // Deteksi scroll untuk infinite scroll & scroll to top
   useEffect(() => {
     const container = scrollContainerRef.current;
@@ -85,35 +165,22 @@ export default function NotesListPage() {
 
     container.addEventListener('scroll', handleScroll);
     return () => container.removeEventListener('scroll', handleScroll);
-  }, [loadingMore, hasMore]);
+  }, [loadingMore, hasMore, loadMore]);
 
-  const loadNotes = async (page = 1, reset = false) => {
-    if (!reset) {
-      setLoadingMore(true);
-    };
-
-    const params = {
-      page: page,
-      per_page: itemsPerPage,
-      from_date: format(dateRange[0].startDate, 'yyyy-MM-dd'),
-      to_date: format(dateRange[0].endDate, 'yyyy-MM-dd')
-    };
-    
-    if (topLikeActive) {
-      params.filter = 'top_like';
-    };
-    
-    await fetchNotes(params);
-  };
-  const loadMore = useCallback(() => {
-    if (!loadingMore && hasMore) {
-      const nextPage = currentPage + 1;
-      setCurrentPage(nextPage);
-      loadNotes(nextPage);
-    };
-  }, [currentPage, loadingMore, hasMore]);
   const scrollToTop = () => {
     scrollContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleApplyDateFilter = () => {
+    setDateRange(tempDateRange);
+    setHasDateChanged(false);
+    setShowDatePicker(false);
+  };
+
+  const handleOpenDatePicker = () => {
+    setTempDateRange(dateRange); // Sync temp with current
+    setHasDateChanged(false);
+    setShowDatePicker(!showDatePicker);
   };
   
   // Tutup date picker saat klik di luar area date picker
@@ -138,10 +205,9 @@ export default function NotesListPage() {
     return matchesSearch;
   });
   
-  // Pinterest-style Masonry Layout: Simpel distribusi ke 3 kolom
+  // Pinterest-style Masonry Layout
   const distributeNotesToColumns = (notes) => {
-    const columns = [[], [], []]; // Set menjadi 3 kolom
-    // Simpel round-robin distribusi
+    const columns = [[], [], []];
     notes.forEach((note, index) => {
       const columnIndex = index % 3;
       columns[columnIndex].push(note);
@@ -149,13 +215,16 @@ export default function NotesListPage() {
     
     return columns;
   };
+
   const noteColumns = distributeNotesToColumns(filteredNotes);
+
   const handleImageClick = (imageUrl) => {
     setImageViewer({
       isOpen: true,
       imageUrl: imageUrl
     });
   };
+
   const handleReactionClick = async (noteId, reactionType) => {
     if (!isAuthenticated()) {
       setGuestWarningModal({
@@ -167,9 +236,26 @@ export default function NotesListPage() {
     
     try {
       const response = await listNotesAPI.toggleReaction(noteId, reactionType);
+      
       if (response.data && response.data.data) {
-        updateLocalReaction(noteId, response.data.data);
-      };
+        // Update local state
+        setAllNotes(prevNotes => prevNotes.map(note => {
+          if (note.id === noteId) {
+            return {
+              ...note,
+              reactions: {
+                heart: response.data.data.reactions?.heart || 0,
+                like: response.data.data.reactions?.like || 0,
+                laugh: response.data.data.reactions?.laugh || 0,
+                surprised: response.data.data.reactions?.surprised || 0,
+                fire: response.data.data.reactions?.fire || 0,
+              },
+              userReactions: response.data.data.user_reactions || [],
+            };
+          }
+          return note;
+        }));
+      }
     } catch (error) {
       console.error('Error toggling reaction:', error);
     };
@@ -184,14 +270,6 @@ export default function NotesListPage() {
 
   return (
     <Layout>
-      {loading ? (
-        <div className="flex items-center justify-center w-full h-screen bg-gray-50">
-          <div className="text-center">
-            <div className="inline-block w-12 h-12 border-4 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
-            <p className="mt-4 text-gray-600">Loading notes...</p>
-          </div>
-        </div>
-      ) : (
       <div className="flex flex-col h-full overflow-hidden bg-gray-50">
         {/* Header */}
         <div className="px-6 py-4 space-y-4 bg-white">
@@ -199,7 +277,7 @@ export default function NotesListPage() {
           <h1 className="block text-2xl font-bold text-center text-gray-900 sm:hidden">Notes</h1>
           <div className="flex flex-col items-center justify-between gap-4 lg:flex-row">
             {/* Search */}
-            <div className="relative w-full lg:max-w-[320px] xl:max-w-[768px] 2xl:max-w-[968px]">
+            <div className="relative w-full lg:max-w-[320px] xl:max-w-[768px] 2xl:max-w-[600px]">
               <Search className="absolute w-5 h-5 text-gray-400 transform -translate-y-1/2 left-3 top-1/2" />
               <input
                 type="text"
@@ -226,7 +304,7 @@ export default function NotesListPage() {
               {/* Date Range Picker */}
               <div className="relative" ref={datePickerRef}>
                 <button
-                  onClick={() => setShowDatePicker(!showDatePicker)}
+                  onClick={handleOpenDatePicker}
                   className="cursor-pointer flex items-center gap-2 px-3 py-2 text-[10px] text-gray-700 bg-white border border-gray-300 rounded-lg sm:text-lg hover:bg-gray-50"
                 >
                   <Calendar className="w-4 h-4" />
@@ -236,34 +314,26 @@ export default function NotesListPage() {
                   <div className="absolute right-0 z-50 mt-2 bg-white border border-gray-300 rounded-lg shadow-lg">
                     <DateRangePicker
                       onChange={item => {
-                        setDateRange([item.selection]);
+                        setTempDateRange([item.selection]);
+                        setHasDateChanged(true);
                         setCurrentFilter('custom');
                       }}
                       showSelectionPreview={true}
                       moveRangeOnFirstSelection={false}
                       months={1}
-                      ranges={dateRange}
+                      ranges={tempDateRange}
                       direction="horizontal"
                       inputRanges={[]}
                     />
                     <div className="flex justify-end gap-2 p-3 border-t border-gray-100">
-                      {/* <button
-                        onClick={() => {
-                          setDateRange([{
-                            startDate: new Date(),
-                            endDate: new Date(),
-                            key: 'selection'
-                          }]);
-                          setCurrentFilter('today');
-                          setShowDatePicker(false);
-                        }}
-                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 !cursor-pointer"
-                      >
-                        Today
-                      </button> */}
                       <button
-                        onClick={() => setShowDatePicker(false)}
-                        className="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 !cursor-pointer"
+                        onClick={handleApplyDateFilter}
+                        disabled={!hasDateChanged}
+                        className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                          hasDateChanged
+                            ? 'bg-blue-500 text-white hover:bg-blue-600 cursor-pointer'
+                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        }`}
                       >
                         Apply
                       </button>
@@ -276,138 +346,145 @@ export default function NotesListPage() {
           {/* Notes Title Desktop */}
           <h2 className="hidden text-2xl font-bold text-gray-900 sm:block">Notes</h2>
         </div>
-        {/* Notes */}
-        <div ref={scrollContainerRef} className="relative flex-1 p-6 overflow-auto">
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
-            {noteColumns.map((column, columnIndex) => (
-              <div key={columnIndex} className="flex flex-col gap-6">
-                {column.map((note) => (
-                  <div
-                    key={note.id}
-                    className="relative p-4 overflow-hidden rounded-lg shadow-md sm:rounded-2xl"
-                    style={{ backgroundColor: note.backgroundColor }}
-                  >
-                    {/* Decoration */}
-                    <div className="absolute hidden w-24 h-24 bg-black rounded-full sm:inline opacity-10 -top-10 -right-10"></div>
-                    {/* Author */}
-                    <div className="flex justify-between relative z-10 mb-3 text-[10px] sm:text-base text-[#757575]">
-                      <div><span>{note?.author}</span><span className="ml-2 font-semibold">{isMyNotes(note)}</span></div>
-                      <div className="inline-block font-medium sm:hidden">{format(new Date(note.createdAt), 'dd/MM/yyyy')}</div>
-                    </div>
-                    {/* Image if exists */}
-                    {note.image && (
-                      <div 
-                        className="relative z-10 mb-4 overflow-hidden rounded-md cursor-pointer sm:rounded-xl group"
-                        onClick={() => handleImageClick(note.image)}
+          {loading ? (
+            <div className="flex items-center justify-center w-full h-screen bg-gray-50">
+              <div className="text-center">
+                <div className="inline-block w-12 h-12 border-4 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
+                <p className="mt-4 text-gray-600">Loading notes...</p>
+              </div>
+            </div>
+          ) : (
+            <div ref={scrollContainerRef} className="relative flex-1 p-6 overflow-auto">
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                {noteColumns.map((column, columnIndex) => (
+                  <div key={columnIndex} className="flex flex-col gap-6">
+                    {column.map((note) => (
+                      <div
+                        key={note.id}
+                        className="relative p-4 overflow-hidden rounded-lg shadow-md sm:rounded-2xl"
+                        style={{ backgroundColor: note.backgroundColor }}
                       >
-                        <img 
-                          src={note.image} 
-                          alt="Thumbnail - Agora" 
-                          className="object-cover w-full transition-transform h-44 group-hover:scale-105"
-                        />
+                        {/* Decoration */}
+                        <div className="absolute hidden w-24 h-24 bg-black rounded-full sm:inline opacity-10 -top-10 -right-10"></div>
+                        {/* Author */}
+                        <div className="flex justify-between relative z-10 mb-3 text-[10px] sm:text-base text-[#757575]">
+                          <div><span>{note?.author}</span><span className="ml-2 font-semibold">{isMyNotes(note)}</span></div>
+                          <div className="inline-block font-medium sm:hidden">{format(new Date(note.createdAt), 'dd/MM/yyyy')}</div>
+                        </div>
+                        {/* Image if exists */}
+                        {note.image && (
+                          <div 
+                            className="relative z-10 mb-4 overflow-hidden rounded-md cursor-pointer sm:rounded-xl group"
+                            onClick={() => handleImageClick(note.image)}
+                          >
+                            <img 
+                              src={note.image} 
+                              alt="Thumbnail - Agora" 
+                              className="object-cover w-full transition-transform h-44 group-hover:scale-105"
+                            />
+                          </div>
+                        )}
+                        {/* Title & Description */}
+                        <div className="relative z-10 mb-4">
+                          <h3 className="text-xs font-bold text-black sm:text-base">
+                            {note.title}
+                          </h3>
+                          <p className="text-[10px] leading-relaxed text-black sm:text-sm">
+                            {note.description}
+                          </p>
+                        </div>
+                        {/* Reaction */}
+                        <div className="relative z-10 flex items-center justify-between sm:gap-1 lg:gap-3 sm:justify-start">
+                          <button
+                            onClick={() => handleReactionClick(note.id, 'heart')}
+                            className={`flex items-center gap-2 sm:gap-1 lg:gap-2 px-3 sm:px-2 lg:px-3 py-1 text-[10px] sm:text-sm lg:text-base text-black transition-all rounded-full cursor-pointer ${
+                              note.userReactions?.includes('heart')
+                                ? 'bg-red-100 border border-red-300'
+                                : 'bg-white border border-gray-300 hover:bg-gray-100 '
+                            }`}
+                          >
+                            ❤️ <span>{note.reactions?.heart || 0}</span>
+                          </button>
+                          <button
+                            onClick={() => handleReactionClick(note.id, 'like')}
+                            className={`flex items-center gap-2 sm:gap-1 lg:gap-2 px-3 sm:px-2 lg:px-3 py-1 text-[10px] sm:text-sm lg:text-base text-black transition-all rounded-full cursor-pointer ${
+                              note.userReactions?.includes('like')
+                                ? 'bg-blue-50 border border-blue-300'
+                                : 'bg-white border border-gray-300 hover:bg-gray-100'
+                            }`}
+                          >
+                            👍 <span>{note.reactions?.like || 0}</span>
+                          </button>
+                          <button
+                            onClick={() => handleReactionClick(note.id, 'laugh')}
+                            className={`flex items-center gap-1 lg:gap-2 px-3 sm:px-2 lg:px-3 py-1 text-[10px] sm:text-sm lg:text-base text-black transition-all rounded-full cursor-pointer ${
+                              note.userReactions?.includes('laugh')
+                                ? 'bg-yellow-100 border border-yellow-500'
+                                : 'bg-white border border-gray-300 hover:bg-gray-100'
+                            }`}
+                          >
+                            😂 <span>{note.reactions?.laugh || 0}</span>
+                          </button>
+                          <button
+                            onClick={() => handleReactionClick(note.id, 'surprised')}
+                            className={`flex items-center gap-2 sm:gap-1 lg:gap-2 px-3 sm:px-2 lg:px-3 py-1 text-[10px] sm:text-sm lg:text-base text-black transition-all rounded-full cursor-pointer ${
+                              note.userReactions?.includes('surprised')
+                                ? 'bg-purple-100 border border-purple-300'
+                                : 'bg-white border border-gray-300 hover:bg-gray-100'
+                            }`}
+                          >
+                            😮 <span>{note.reactions?.surprised || 0}</span>
+                          </button>
+                          <button
+                            onClick={() => handleReactionClick(note.id, 'fire')}
+                            className={`flex items-center gap-2 sm:gap-1 lg:gap-2 px-3 sm:px-2 lg:px-3 py-1 text-[10px] sm:text-sm lg:text-base text-black transition-all rounded-full cursor-pointer ${
+                              note.userReactions?.includes('fire')
+                                ? 'bg-orange-100 border border-orange-300'
+                                : 'bg-white border border-gray-300 hover:bg-gray-100'
+                            }`}
+                          >
+                            🔥 <span>{note.reactions?.fire || 0}</span>
+                          </button>
+                        </div>
+                        {/* Date */}
+                        <div className="mt-2 text-[10px] sm:text-sm font-medium text-[#757575] sm:block hidden">
+                          {format(new Date(note.createdAt), 'dd/MM/yyyy')}
+                        </div>
                       </div>
-                    )}
-                    {/* Title & Description */}
-                    <div className="relative z-10 mb-4">
-                      <h3 className="text-xs font-bold text-black sm:text-base">
-                        {note.title}
-                      </h3>
-                      <p className="text-[10px] leading-relaxed text-black sm:text-sm">
-                        {note.description}
-                      </p>
-                    </div>
-                    {/* Reaction */}
-                    <div className="relative z-10 flex items-center justify-between sm:gap-3 sm:justify-start">
-                        <button
-                          onClick={() => handleReactionClick(note.id, 'heart')}
-                          className={`flex items-center gap-1 px-3 py-1 text-[10px] sm:text-base text-black transition-all rounded-full cursor-pointer ${
-                            note.userReactions?.includes('heart')
-                              ? 'bg-red-100 border border-red-300'
-                              : 'bg-white border border-gray-300 hover:bg-gray-100 '
-                          }`}
-                        >
-                          ❤️ <span>{note.reactions?.heart || 0}</span>
-                        </button>
-                        <button
-                          onClick={() => handleReactionClick(note.id, 'like')}
-                          className={`flex items-center gap-1 px-3 py-1 text-[10px] sm:text-base text-black transition-all rounded-full cursor-pointer ${
-                            note.userReactions?.includes('like')
-                              ? 'bg-blue-50 border border-blue-300'
-                              : 'bg-white border border-gray-300 hover:bg-gray-100'
-                          }`}
-                        >
-                          👍 <span>{note.reactions?.like || 0}</span>
-                        </button>
-                        <button
-                          onClick={() => handleReactionClick(note.id, 'laugh')}
-                          className={`flex items-center gap-1 px-3 py-1 text-[10px] sm:text-base text-black transition-all rounded-full cursor-pointer ${
-                            note.userReactions?.includes('laugh')
-                              ? 'bg-yellow-100 border border-yellow-500'
-                              : 'bg-white border border-gray-300 hover:bg-gray-100'
-                          }`}
-                        >
-                          😂 <span>{note.reactions?.laugh || 0}</span>
-                        </button>
-                        <button
-                          onClick={() => handleReactionClick(note.id, 'surprised')}
-                          className={`flex items-center gap-1 px-3 py-1 text-[10px] sm:text-base text-black transition-all rounded-full cursor-pointer ${
-                            note.userReactions?.includes('surprised')
-                              ? 'bg-purple-100 border border-purple-300'
-                              : 'bg-white border border-gray-300 hover:bg-gray-100'
-                          }`}
-                        >
-                          😮 <span>{note.reactions?.surprised || 0}</span>
-                        </button>
-                        <button
-                          onClick={() => handleReactionClick(note.id, 'fire')}
-                          className={`flex items-center gap-1 px-3 py-1 text-[10px] sm:text-base text-black transition-all rounded-full cursor-pointer ${
-                            note.userReactions?.includes('fire')
-                              ? 'bg-orange-100 border border-orange-300'
-                              : 'bg-white border border-gray-300 hover:bg-gray-100'
-                          }`}
-                        >
-                          🔥 <span>{note.reactions?.fire || 0}</span>
-                        </button>
-                    </div>
-                    {/* Date */}
-                    <div className="mt-2 text-[10px] sm:text-sm font-medium text-[#757575] sm:block hidden">
-                      {format(new Date(note.createdAt), 'dd/MM/yyyy')}
-                    </div>
+                    ))}
                   </div>
                 ))}
               </div>
-            ))}
-          </div>
-          {/* Loading More Indicator */}
-          {loadingMore &&  (
-            <div className="flex justify-center py-8">
-              <div className="inline-block w-8 border-4 border-blue-500 rounded-full h- border-t-transparent animate-spin"></div>
+              {/* Loading More Indicator */}
+              {loadingMore &&  (
+                <div className="flex justify-center py-8">
+                  <div className="inline-block w-8 h-8 border-4 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
+                </div>
+              )}
+              {/* End of Results */}
+              {!hasMore && allNotes.length > 0 && filteredNotes.length > 0 && (
+                <div className="py-8 text-center text-gray-500">
+                  <p>No more notes to load</p>
+                </div>
+              )}
+              {/* Empty state */}
+              {filteredNotes.length === 0 && !loading && (
+                <div className="py-12 text-center">
+                  <p className="text-gray-500">No notes found.</p>
+                </div>
+              )}
+              {/* Scroll to Top Button */}
+              {showScrollTop && (
+                <button
+                  onClick={scrollToTop}
+                  className="fixed flex items-center justify-center w-12 h-12 text-white transition-all bg-blue-500 rounded-full shadow-lg cursor-pointer z-11 bottom-8 right-8 hover:bg-blue-600 hover:scale-110"
+                >
+                  <ArrowUp className="w-6 h-6" />
+                </button>
+              )}
             </div>
           )}
-          {/* End of Results */}
-          {!hasMore && allNotes.length > 0 && (
-            <div className="py-8 text-center text-gray-500">
-              <p>No more notes to load</p>
-            </div>
-          )}
-          {/* Empty state */}
-          {filteredNotes.length === 0 && !loading && (
-            <div className="py-12 text-center">
-              <p className="text-gray-500">No notes found.</p>
-            </div>
-          )}
-          {/* Scroll to Top Button */}
-          {showScrollTop && (
-            <button
-              onClick={scrollToTop}
-              className="fixed flex items-center justify-center w-12 h-12 text-white transition-all bg-blue-500 rounded-full shadow-lg cursor-pointer z-11 bottom-8 right-8 hover:bg-blue-600 hover:scale-110"
-            >
-              <ArrowUp className="w-6 h-6" />
-            </button>
-          )}
-        </div>
       </div>
-      )}
       {/* Image Viewer Modal */}
       <ImageViewer
         isOpen={imageViewer.isOpen}

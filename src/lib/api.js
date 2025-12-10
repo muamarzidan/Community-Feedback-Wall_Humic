@@ -66,7 +66,15 @@ export const userAPI = {
   },
 };
 export const canvasNotesAPI = {
-  getCanvasNotes: (canvasId = 1) => api.get(`/api/canvas/${canvasId}/notes`),
+  // Get current active canvas info
+  getCurrentCanvas: () => api.get('/api/canvas/current'),
+  // Get current active canvas notes
+  getCurrentCanvasNotes: () => api.get('/api/canvas/current/notes'),
+  // Get specific canvas by ID (metadata only)
+  getCanvasById: (canvasId) => api.get(`/api/canvas/${canvasId}`),
+  // Get notes from specific canvas by ID
+  getCanvasNotesByID: (canvasId) => api.get(`/api/canvas/${canvasId}/notes`),
+  // Get note by ID
   getNoteById: (noteId) => api.get(`/api/notes/${noteId}`),
   createNote: (noteData) => {
     const formData = new FormData();
@@ -127,7 +135,7 @@ export const listNotesAPI = {
 };
 export const adminApi = {
   getDataExcel: () => api.get('/api/notes/export/csv', { 
-    responseType: 'text' // CSV is text format
+    responseType: 'text'
   }),
 };
 export default api;

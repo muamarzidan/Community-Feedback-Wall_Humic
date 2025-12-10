@@ -48,16 +48,16 @@ const ImageViewer = ({ isOpen, imageUrl, onClose }) => {
                 {/* Close Button */}
                 <button
                     onClick={onClose}
-                    className="flex items-center gap-2 px-6 py-3 text-white transition-all bg-gray-800 rounded-lg hover:bg-gray-700 active:scale-95"
+                    className="flex items-center gap-2 px-6 py-3 text-white transition-all bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-700 active:scale-95 "
                 >
                     <X className="w-5 h-5" />
                     <span className="font-medium">Close</span>
                 </button>
             </div>
             {/* Background Click Hint */}
-            <div className="absolute text-sm text-white/60 top-4 right-4">
+            {/* <div className="absolute text-sm text-white/60 top-4 right-4">
                 Press ESC or click outside to close
-            </div>
+            </div> */}
         </div>
     );
 };

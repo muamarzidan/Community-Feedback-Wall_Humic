@@ -11,7 +11,7 @@ const ZoomControls = ({ zoom, onZoomIn, onZoomOut }) => {
       >
         <ZoomOut className="w-6 h-6 text-gray-50" />
       </button>
-      <div className="px-[12px] py-[15px] w-fit flex justify-center items-center text-xs text-gray-50 text-center min-w-[40px] bg-primary-500 rounded-full hover:bg-primary-700">
+      <div className="w-12 h-12 flex justify-center items-center text-xs text-gray-50 text-center min-w-[40px] bg-primary-500 rounded-full hover:bg-primary-700">
         <span className="!text-xs">{Math.round(zoom * 100)}%</span>
       </div>
       <button

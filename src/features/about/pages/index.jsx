@@ -53,7 +53,6 @@ const teamMembers = [
         email: "dani@gmail.com"
     }
 ];
-
 export default function AboutPage() {
     const [searchTerm, setSearchTerm] = useState('');
     
