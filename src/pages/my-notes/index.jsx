@@ -3,11 +3,14 @@ import { Search, ArrowUp, Pencil, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 
-import { userAPI, listNotesAPI } from '../../lib/api';
+import { userAPI, listNotesAPI, canvasNotesAPI } from '../../lib/api';
 import { getCurrentUser } from '../../utils/getCurrentUser';
 import Layout from '../../components/Layout';
 import ImageViewer from '../../components/ImageViewer';
 import GuestWarningModal from '../../components/GuestWarningModal';
+import NoteModal from '../../components/NoteModal';
+import DeleteConfirmModal from '../../components/DeleteConfirmModal';
+import Toast from '../../components/Toast';
 
 
 export default function MyNotesPage() {
@@ -28,6 +31,20 @@ export default function MyNotesPage() {
     const [guestWarningModal, setGuestWarningModal] = useState({
         isOpen: false,
         message: ''
+    });
+    const [modalState, setModalState] = useState({
+        isOpen: false,
+        editingNote: null
+    });
+    const [deleteConfirm, setDeleteConfirm] = useState({
+        isOpen: false,
+        noteId: null,
+        noteTitle: ''
+    });
+    const [toast, setToast] = useState({
+        isOpen: false,
+        message: '',
+        type: 'success'
     });
 
 
@@ -214,6 +231,105 @@ export default function MyNotesPage() {
         };
     };
 
+    const handleEditNote = (note) => {
+        setModalState({
+            isOpen: true,
+            editingNote: note
+        });
+    };
+
+    const handleDeleteNote = (note) => {
+        setDeleteConfirm({
+            isOpen: true,
+            noteId: note.id,
+            noteTitle: note.title
+        });
+    };
+
+    const confirmDelete = async () => {
+        try {
+            await canvasNotesAPI.deleteNote(deleteConfirm.noteId);
+            
+            // Remove from local state
+            setAllNotes(prev => prev.filter(n => n.id !== deleteConfirm.noteId));
+            
+            setToast({
+                isOpen: true,
+                message: 'Note deleted successfully!',
+                type: 'success'
+            });
+            
+            setDeleteConfirm({
+                isOpen: false,
+                noteId: null,
+                noteTitle: ''
+            });
+        } catch (error) {
+            console.error('Error deleting note:', error);
+            setToast({
+                isOpen: true,
+                message: 'Failed to delete note',
+                type: 'error'
+            });
+        }
+    };
+
+    const handleSaveNote = async (noteData) => {
+        try {
+            if (modalState.editingNote) {
+                // Transform backgroundColor to color format for API
+                const apiPayload = {
+                    title: noteData.title,
+                    description: noteData.description,
+                    color: noteData.backgroundColor?.replace('#', '') || 'fbbf24',
+                    image: noteData.image,
+                    delete_image: noteData.delete_image || false
+                };
+                
+                await canvasNotesAPI.updateNote(modalState.editingNote.id, apiPayload);
+                
+                // Update local state
+                setAllNotes(prev => prev.map(note => {
+                    if (note.id === modalState.editingNote.id) {
+                        return {
+                            ...note,
+                            title: noteData.title,
+                            description: noteData.description,
+                            backgroundColor: noteData.backgroundColor,
+                            image: noteData.image instanceof File ? null : note.image, // Will be updated after API response
+                        };
+                    }
+                    return note;
+                }));
+                
+                setToast({
+                    isOpen: true,
+                    message: 'Note updated successfully!',
+                    type: 'success'
+                });
+            }
+            
+            setModalState({
+                isOpen: false,
+                editingNote: null
+            });
+        } catch (error) {
+            console.error('Error saving note:', error);
+            setToast({
+                isOpen: true,
+                message: error.message || 'Failed to save note',
+                type: 'error'
+            });
+        }
+    };
+
+    const handleCloseModal = () => {
+        setModalState({
+            isOpen: false,
+            editingNote: null
+        });
+    };
+
     const reactionButtons = [
         { type: 'heart', emoji: '❤️', label: 'Heart' },
         { type: 'like', emoji: '👍', label: 'Like' },
@@ -368,16 +484,22 @@ export default function MyNotesPage() {
                                                     🔥 <span>{note.reactions?.fire || 0}</span>
                                                 </button>
                                             </div>
-                                            {/* Date */}
+                                            {/* Date and Actions */}
                                             <div className="mt-2 text-[10px] sm:text-sm font-medium text-[#757575] flex justify-between items-center">
                                                 {format(new Date(note.createdAt), 'dd/MM/yyyy')}
                                                 {
                                                     note.userType === 'you' && (
                                                         <div className="flex gap-2 ">
-                                                            <div className="flex items-center p-2 transition-colors bg-white rounded-full cursor-pointer hover:bg-gray-100">
+                                                            <div 
+                                                                onClick={() => handleEditNote(note)}
+                                                                className="flex items-center p-2 transition-colors bg-white rounded-full cursor-pointer hover:bg-gray-100"
+                                                            >
                                                                 <Pencil className="inline-block w-3 h-3 text-black sm:w-4 sm:h-4" />
                                                             </div>
-                                                            <div className="flex items-center p-2 transition-all bg-red-500 rounded-full cursor-pointer hover:bg-red-600">
+                                                            <div 
+                                                                onClick={() => handleDeleteNote(note)}
+                                                                className="flex items-center p-2 transition-all bg-red-500 rounded-full cursor-pointer hover:bg-red-600"
+                                                            >
                                                                 <Trash2 className="inline-block w-3 h-3 text-white sm:w-4 sm:h-4" />
                                                             </div>
                                                         </div>
@@ -434,6 +556,27 @@ export default function MyNotesPage() {
                 isOpen={guestWarningModal.isOpen}
                 onClose={() => setGuestWarningModal({ isOpen: false, message: '' })}
                 message={guestWarningModal.message}
+            />
+            {/* Note Modal */}
+            <NoteModal
+                isOpen={modalState.isOpen}
+                onClose={handleCloseModal}
+                onSave={handleSaveNote}
+                note={modalState.editingNote}
+            />
+            {/* Delete Confirmation Modal */}
+            <DeleteConfirmModal
+                isOpen={deleteConfirm.isOpen}
+                onClose={() => setDeleteConfirm({ isOpen: false, noteId: null, noteTitle: '' })}
+                onConfirm={confirmDelete}
+                noteTitle={deleteConfirm.noteTitle}
+            />
+            {/* Toast Notification */}
+            <Toast
+                isOpen={toast.isOpen}
+                message={toast.message}
+                type={toast.type}
+                onClose={() => setToast({ isOpen: false, message: '', type: 'success' })}
             />
         </Layout>
     );
