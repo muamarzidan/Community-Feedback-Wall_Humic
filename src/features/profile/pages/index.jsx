@@ -126,7 +126,6 @@ export default function ProfilePage() {
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
             
-            console.log("Data exported successfully");
         } catch (error) {
             console.error("Data export failed:", error);
             alert("Data export failed. Please try again.");

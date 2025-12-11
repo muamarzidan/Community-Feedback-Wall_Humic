@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom';
 import { Search, Mail, UserPlus } from 'lucide-react';
 
 import Layout from '@/components/Layout';
-import AmarProfile from '@/assets/images/profile.jpg';
+import DifaProfile from '@/assets/images/profile-difa-agora.jpeg';
+import RheaProfile from '@/assets/images/profile-rhea-agora.jpeg';
+import AmarProfile from '@/assets/images/profile-amar-agora.jpg';
 import FigmaIcon from '@/assets/icons/figma-agora.png';
 
 
@@ -12,45 +14,34 @@ const teamMembers = [
         name: "Difa Rindang Utari",
         alt: "Profile Difa Rindang Utari - Agora",
         role: "UI/UX Designer",
-        description: "Fokus pada user experience, prototyping, dan sistem desain. Sering menulis dokumentasi & membuat komponen reusable.",
-        tools: ["Figma", "Figjam", "AI"],
+        description: "Fokus pada user interface, experience, untuk menciptakan desain yang menarik dan fungsional.",
+        tools: ["Figma", "Figjam"],
         bgColor: "bg-[#F3E8FF]",
-        image: AmarProfile,
-        linkedin: "https://www.linkedin.com/in/difa-rindang-utari/",
-        email: "difa@gmail.com"
+        image: DifaProfile,
+        linkedin: "https://www.linkedin.com/in/difarindangutari/",
+        email: "difarindangutarii@gmail.com"
     },
     {
         name: "Arya Jagadditha",
         alt: "Profile Arya Jagadditha - Agora",
-        role: "Backend Engineer",
+        role: "Backend Developer",
         description: "Menangani API, database, dan optimasi performa server-side untuk memastikan integrasi lancar.",
-        tools: ["PHP", "Laravel", "MySQL"],
+        tools: ["PHP", "Laravel 12", "MySQL", "Postman"],
         bgColor: "bg-[#FFE8E8]",
-        image: AmarProfile,
-        linkedin: "https://www.linkedin.com/in/arya-jagadditha/",
-        email: "arya@gmail.com"
+        image: RheaProfile,
+        linkedin: "https://www.linkedin.com/in/jagadditha/",
+        email: "ajagadditha@gmail.com"
     },
     {
         name: "Muamar Zidan Tri Antoro",
         alt: "Profile Muamar Zidan Tri Antoro - Agora",
         role: "Frontend Developer",
         description: "Membangun antarmuka yang interaktif dan cepat dengan React dan Tailwind CSS.",
-        tools: ["JavaScript", "React", "Tailwind"],
+        tools: ["JavaScript", "React Vite", "Tailwind CSS", "React-Konva"],
         bgColor: "bg-[#E8F4F8]",
         image: AmarProfile,
-        linkedin: "https://www.linkedin.com/in/muamar-zidan-tri-antoro/",
-        email: "muamar@gmail.com"
-    },
-    {
-        name: "Muhammad Dani Arya Putra",
-        alt: "Profile Muhammad Dani Arya Putra - Agora",
-        role: "Mobile Developer",
-        description: "Mengembangkan aplikasi mobile cross-platform menggunakan Flutter untuk pengalaman pengguna yang mulus.",
-        tools: ["Dart", "Flutter"],
-        bgColor: "bg-[#FFF8E8]",
-        image: AmarProfile,
-        linkedin: "https://www.linkedin.com/in/muhammad-dani-arya-putra/",
-        email: "dani@gmail.com"
+        linkedin: "https://www.linkedin.com/in/muamarzidan/",
+        email: "codeofomiru11@gmail.com"
     }
 ];
 
@@ -171,4 +162,4 @@ export default function AboutPage() {
             </div>
         </Layout>
     );
-}; 
+};

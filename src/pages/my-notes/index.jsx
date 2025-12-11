@@ -301,6 +301,8 @@ export default function MyNotesPage() {
                     }
                     return note;
                 }));
+
+                window.location.reload();
                 
                 setToast({
                     isOpen: true,
@@ -337,8 +339,6 @@ export default function MyNotesPage() {
         { type: 'surprised', emoji: '😮', label: 'Surprised' },
         { type: 'fire', emoji: '🔥', label: 'Fire' },
     ];
-
-    console.log('Rendered MyNotesPage with', allNotes, 'notes');
 
     return (
         <Layout>
