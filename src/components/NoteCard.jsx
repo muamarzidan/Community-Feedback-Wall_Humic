@@ -125,15 +125,20 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, on
     const descFontSize = 14;
     const titleLineHeight = 1.2; // Konva lineHeight multiplier
     const descLineHeight = 1.43;
+    const maxTitleLines = 3;
     
     // Measure actual text height
-    const titleHeight = measureTextHeight(
+    const titleHeightRaw = measureTextHeight(
       note.title, 
       titleFontSize, 
       'bold', 
       contentWidth, 
       titleLineHeight
     );
+    
+    // Cap title at 3 lines maximum
+    const maxTitleHeight = titleFontSize * titleLineHeight * maxTitleLines;
+    const titleHeight = Math.min(titleHeightRaw, maxTitleHeight);
     
     const descText = note.description || '';
     const descHeight = measureTextHeight(
@@ -334,7 +339,7 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, on
               onMouseLeave={handleButtonMouseLeave}
             />
           </Group>
-        )}
+        )}x``
       </Group>
       {/* Title */}
       <Text
@@ -347,6 +352,8 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, on
         width={contentWidth}
         wrap="word"
         lineHeight={1.2}
+        height={dimensions.titleHeight}
+        ellipsis={true}
       />
       {/* Image */}
       {note.image && image && (
@@ -414,6 +421,7 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, on
         fontSize={14}
         fill="#000000"
         width={contentWidth}
+        height={dimensions.descHeight}
         wrap="word"
         lineHeight={1.43}
       />

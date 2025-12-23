@@ -5,8 +5,9 @@ import { IoArrowBack } from "react-icons/io5";
 import { HiOutlineEyeOff, HiOutlineEye } from "react-icons/hi";
 
 import { useAuth } from '@/contexts/AuthContext';
-import RegisterBanner from '@/assets/images/register-banner-agora.png';
 import PasswordStrengthIndicator from '@/components/PasswordStrengthIndicator';
+import RegisterBanner from '@/assets/images/register-banner-agora.png';
+import logoAgora from '@/assets/icons/logo-agora.png';
 
 
 export default function SignUpPage() {
@@ -68,18 +69,23 @@ export default function SignUpPage() {
         <div className="flex items-center justify-center min-h-screen bg-white">
             <div className="flex w-full max-w-5xl overflow-hidden rounded-2xl">
                 {/* Left side */}
-                <div className="items-center justify-center hidden w-1/2 p-8 md:block sm:flex">
+                <div className="items-center justify-center hidden w-1/2 p-8 lg:flex">
                     <img
                         src={RegisterBanner}
                         alt="Signup illustration"
                         className="w-full h-full max-w-md rounded-2xl"
                     />
                 </div>
-
                 {/* Right side */}
-                <div className="w-full p-6 sm:p-10 md:w-1/2">
-                    <div className="flex sm:justify-end">
-                        <Link to="/" className="text-3xl font-bold transition-colors hover:text-gray-700">Logo</Link>
+                <div className="w-full p-6 sm:p-10 lg:w-1/2">
+                    <div className="flex lg:justify-end">
+                        <Link to="/" className="text-3xl font-bold transition-colors hover:text-gray-700">
+                            <img
+                                src={logoAgora}
+                                alt="Agora Logo"
+                                className="w-10"
+                            />
+                        </Link>
                     </div>
 
                     <h2 className="mt-8 text-2xl font-semibold">Sign up</h2>
@@ -139,9 +145,9 @@ export default function SignUpPage() {
                                 className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
                             >
                                 {showPassword ? (
-                                    <HiOutlineEye className="w-5 h-5" />
+                                    <HiOutlineEye className="w-5 h-5 !cursor-pointer" />
                                 ) : (
-                                    <HiOutlineEyeOff className="w-5 h-5" />
+                                    <HiOutlineEyeOff className="w-5 h-5 !cursor-pointer" />
                                 )}
                             </button>
                             <PasswordStrengthIndicator password={formData.password} />

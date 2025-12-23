@@ -2,7 +2,6 @@ import React, { useMemo } from 'react';
 import { Check, X } from 'lucide-react';
 
 const PasswordStrengthIndicator = ({ password }) => {
-  // Validation rules
   const validations = useMemo(() => {
     return {
       length: password.length >= 8,
@@ -13,7 +12,6 @@ const PasswordStrengthIndicator = ({ password }) => {
     };
   }, [password]);
 
-  // Calculate strength
   const strength = useMemo(() => {
     const passedRules = Object.values(validations).filter(Boolean).length;
     
@@ -23,12 +21,10 @@ const PasswordStrengthIndicator = ({ password }) => {
     return { level: 'strong', label: 'Strong', color: 'bg-green-500' };
   }, [validations]);
 
-  // Don't show anything if password is empty
   if (!password) return null;
 
   return (
     <div className="mt-2 space-y-2">
-      {/* Strength Bar */}
       <div className="flex items-center gap-2">
         <div className="flex-1 h-2 overflow-hidden bg-gray-200 rounded-full">
           <div
@@ -48,7 +44,7 @@ const PasswordStrengthIndicator = ({ password }) => {
       </div>
 
       {/* Validation Checklist */}
-      <div className="grid grid-cols-1 gap-1 text-xs">
+      <div className="grid grid-cols-2 gap-1 text-xs">
         <ValidationItem
           isValid={validations.length}
           label="At least 8 characters"

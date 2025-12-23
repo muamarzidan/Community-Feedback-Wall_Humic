@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import { FcGoogle } from "react-icons/fc";
 import { HiOutlineEyeOff, HiOutlineEye } from "react-icons/hi";
 import { useAuth } from '@/contexts/AuthContext';
+import PasswordStrengthIndicator from './PasswordStrengthIndicator';
 
 import LoginBanner from '@/assets/images/login-banner-agora.png';
 import RegisterBanner from '@/assets/images/register-banner-agora.png';
@@ -250,8 +251,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                                     ) : (
                                         <HiOutlineEyeOff className="w-5 h-5 !cursor-pointer" />
                                     )}
-                                </button>
-                            </div>
+                                </button>                                <PasswordStrengthIndicator password={formData.password} />                            </div>
                             <div className="relative">
                                 <input
                                     type={showConfirmPassword ? "text" : "password"}

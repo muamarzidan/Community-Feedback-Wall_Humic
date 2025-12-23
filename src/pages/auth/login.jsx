@@ -6,6 +6,7 @@ import { HiOutlineEyeOff, HiOutlineEye } from "react-icons/hi";
 
 import { useAuth } from '@/contexts/AuthContext';
 import LoginBanner from '@/assets/images/login-banner-agora.png';
+import logoAgora from '@/assets/icons/logo-agora.png';
 
 
 export default function LoginPage() {
@@ -61,8 +62,14 @@ export default function LoginPage() {
             <div className="flex w-full max-w-5xl overflow-hidden rounded-2xl">
                 {/* Left side */}
                 <div className="w-full p-6 sm:p-10 md:w-1/2">
-                    <Link to="/" className="inline-block mb-2 text-3xl font-bold transition-colors hover:text-gray-700">Logo</Link>
-                    <h2 className="mt-8 text-2xl font-semibold">Login</h2>
+                    <Link to="/" className="inline-block mb-2 text-3xl font-bold transition-colors hover:text-gray-700">
+                        <img
+                            src={logoAgora}
+                            alt="Agora Logo"
+                            className="w-10"
+                        />
+                    </Link>
+                    <h2 className="mt-4 text-2xl font-semibold">Login</h2>
                     <p className="mb-6 text-sm text-gray-500">
                         Login to access your travelwise account
                     </p>
