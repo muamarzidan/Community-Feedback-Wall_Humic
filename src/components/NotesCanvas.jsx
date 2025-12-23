@@ -82,6 +82,11 @@ const NotesCanvas = ({
     };
   };
 
+  console.table("mapping notes:", 
+    notes.map(note => note.id)
+  );
+
+
   return (
     <div 
       className="w-full h-full overflow-hidden bg-gray-50"

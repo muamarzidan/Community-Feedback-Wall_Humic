@@ -339,7 +339,7 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, on
               onMouseLeave={handleButtonMouseLeave}
             />
           </Group>
-        )}x``
+        )}
       </Group>
       {/* Title */}
       <Text

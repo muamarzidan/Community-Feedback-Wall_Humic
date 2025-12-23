@@ -266,14 +266,12 @@ function App() {
           message={guestWarningModal.message}
           onClose={() => setGuestWarningModal({ isOpen: false, message: '' })}
         />
-        
         {/* Image Viewer Modal */}
         <ImageViewer
           isOpen={imageViewer.isOpen}
           imageUrl={imageViewer.imageUrl}
           onClose={handleCloseImageViewer}
         />
-        
         {/* Toast Notification */}
         <Toast
           isOpen={toast.isOpen}
@@ -281,7 +279,6 @@ function App() {
           type={toast.type}
           onClose={() => setToast({ isOpen: false, message: '', type: 'success' })}
         />
-        
         {/* Delete Confirmation Modal */}
         <DeleteConfirmModal
           isOpen={deleteConfirm.isOpen}
