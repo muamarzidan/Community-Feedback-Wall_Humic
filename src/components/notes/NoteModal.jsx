@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 
+
 const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
   const [formData, setFormData] = useState({
     title: '',

@@ -8,9 +8,9 @@ import 'react-date-range/dist/theme/default.css';
 import { listNotesAPI } from '../../lib/api';
 import { getCurrentUser } from '../../utils/getCurrentUser';
 import { formatDateRange } from '../../utils/formatDate';
-import Layout from '../../components/Layout';
-import ImageViewer from '../../components/ImageViewer';
-import GuestWarningModal from '../../components/GuestWarningModal';
+import ImageViewer from '../../components/notes/ImageViewer';
+import GuestWarningModal from '../../components/auth/GuestWarningModal';
+import Layout from '../../components/common/Layout';
 
 
 export default function NotesListPage() {

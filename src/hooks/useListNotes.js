@@ -22,25 +22,20 @@ export const useListNotes = () => {
       
       let response;
       if (params.filter || params.from_date || params.to_date) {
-        // Use filtered endpoint
         response = await listNotesAPI.getFilteredNotes(params);
       } else {
-        // Use simple get all
         response = await listNotesAPI.getAllNotes();
       }
       
       if (response.data && response.data.data) {
         const data = response.data.data;
         
-        // Check if it's filtered response or simple response
         if (data.notes) {
-          // Filtered response
           const transformedNotes = data.notes.map(note => transformNoteFromAPI(note));
           setNotes(transformedNotes);
           setPagination(data.pagination);
           setFilterInfo(data.filter);
         } else if (Array.isArray(data)) {
-          // Simple response (array of notes)
           const transformedNotes = data.map(note => transformNoteFromAPI(note));
           setNotes(transformedNotes);
           setPagination(null);

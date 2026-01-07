@@ -8,9 +8,9 @@ import { MdLock } from "react-icons/md";
 import toast from "react-hot-toast";
 
 import { userAPI, authAPI, adminApi } from "../../lib/api";
-import Layout from "../../components/Layout";
 import UpdatePasswordModal from "../../components/UpdatePasswordModal";
-import photoProfile from "@/assets/icons/photoprofile-agora.webp";
+import Layout from "../../components/common/Layout";
+import photoProfile from "@/assets/icons/photoprofile-logo_agora_communityfeedback.webp";
 
 
 export default function ProfilePage() {

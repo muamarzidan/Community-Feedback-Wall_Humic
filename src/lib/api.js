@@ -66,16 +66,9 @@ export const userAPI = {
   },
 };
 export const canvasNotesAPI = {
-  // Get current active canvas info
-  getCurrentCanvas: () => api.get('/api/canvas/current'),
-  // Get current active canvas notes
   getCurrentCanvasNotes: () => api.get('/api/canvas/current/notes'),
-  // Get specific canvas by ID (metadata only)
   getCanvasById: (canvasId) => api.get(`/api/canvas/${canvasId}`),
-  // Get notes from specific canvas by ID
   getCanvasNotesByID: (canvasId) => api.get(`/api/canvas/${canvasId}/notes`),
-  // Get note by ID
-  getNoteById: (noteId) => api.get(`/api/notes/${noteId}`),
   createNote: (noteData) => {
     const formData = new FormData();
     formData.append('title', noteData.title);
@@ -121,7 +114,7 @@ export const listNotesAPI = {
   getAllNotes: () => api.get('/api/notes'),
   getFilteredNotes: (params = {}) => {
     const queryParams = new URLSearchParams();
-    if (params.filter) queryParams.append('filter', params.filter); // 'top_like' or 'newest'
+    if (params.filter) queryParams.append('filter', params.filter);
     if (params.page) queryParams.append('page', params.page);
     if (params.per_page) queryParams.append('per_page', params.per_page);
     if (params.from_date) queryParams.append('from_date', params.from_date);
@@ -129,7 +122,6 @@ export const listNotesAPI = {
     
     return api.get(`/api/notes/filter?${queryParams.toString()}`);
   },
-  getNoteById: (noteId) => api.get(`/api/notes/${noteId}`),
   toggleReaction: (noteId, reactionType) => 
     api.post(`/api/notes/${noteId}/reaction`, { reaction_type: reactionType }),
 };

@@ -5,8 +5,8 @@ import { IoArrowBack } from "react-icons/io5";
 import { HiOutlineEyeOff, HiOutlineEye } from "react-icons/hi";
 
 import { useAuth } from '@/contexts/AuthContext';
-import LoginBanner from '@/assets/images/login-banner-agora.png';
-import logoAgora from '@/assets/icons/logo-agora.png';
+import LoginBanner from '@/assets/images/login-banner-agora.webp';
+import logoAgora from '@/assets/icons/logo_agora_communityfeedback.png';
 
 
 export default function LoginPage() {

@@ -6,8 +6,8 @@ import { HiOutlineEyeOff, HiOutlineEye } from "react-icons/hi";
 
 import { useAuth } from '@/contexts/AuthContext';
 import PasswordStrengthIndicator from '@/components/PasswordStrengthIndicator';
-import RegisterBanner from '@/assets/images/register-banner-agora.png';
-import logoAgora from '@/assets/icons/logo-agora.png';
+import RegisterBanner from '@/assets/images/register-banner-agora.webp';
+import logoAgora from '@/assets/icons/logo_agora_communityfeedback.png';
 
 
 export default function SignUpPage() {

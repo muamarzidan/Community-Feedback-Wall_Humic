@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { X } from 'lucide-react';
 import { FcGoogle } from "react-icons/fc";
 import { HiOutlineEyeOff, HiOutlineEye } from "react-icons/hi";
-import { useAuth } from '@/contexts/AuthContext';
-import PasswordStrengthIndicator from './PasswordStrengthIndicator';
 
-import LoginBanner from '@/assets/images/login-banner-agora.png';
-import RegisterBanner from '@/assets/images/register-banner-agora.png';
+
+import { useAuth } from '@/contexts/AuthContext';
+import PasswordStrengthIndicator from '../PasswordStrengthIndicator';
+import LoginBanner from '@/assets/images/login-banner-agora.webp';
+import RegisterBanner from '@/assets/images/register-banner-agora.webp';
 
 
 export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {

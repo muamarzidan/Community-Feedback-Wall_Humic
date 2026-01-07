@@ -3,24 +3,23 @@ import { useState, useEffect } from 'react';
 import { useCursorMode } from './contexts/CursorModeContext';
 import { useCanvasNotes } from './hooks/useCanvasNotes';
 import { closeAllMenus } from './utils/domUtils';
-import Layout from './components/Layout';
-import NotesCanvas from './components/NotesCanvas';
-import CreateNoteButton from './components/CreateNoteButton';
-import CursorModeToggle from './components/CursorModeToggle';
+import Layout from './components/common/Layout';
+import NotesCanvas from './components/notes/NotesCanvas';
+import CreateNoteButton from './components/notes/CreateNoteButton';
+import CursorModeToggle from './components/notes/CursorModeToggle';
 import ZoomControls from './components/ZoomControls';
 import Pagination from './components/Pagination';
-import NoteModal from './components/NoteModal';
-import GuestWarningModal from './components/GuestWarningModal';
-import ImageViewer from './components/ImageViewer';
-import Toast from './components/Toast';
-import DeleteConfirmModal from './components/DeleteConfirmModal';
+import NoteModal from './components/notes/NoteModal';
+import GuestWarningModal from './components/auth/GuestWarningModal';
+import ImageViewer from './components/notes/ImageViewer';
+import Toast from './components/common/Toast';
+import DeleteConfirmModal from './components/notes/DeleteConfirmModal';
 import './App.css';
 
 
 function App() {
   const { 
     notes, 
-    canvasInfo,
     currentCanvasId,
     navigation,
     addNote, 

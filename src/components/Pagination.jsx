@@ -1,5 +1,5 @@
+import { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useState, useEffect } from 'react';
 
 
 const Pagination = ({ currentCanvasId, navigation, onCanvasChange, onPrevious, onNext, onGoToCurrent }) => {
@@ -8,8 +8,6 @@ const Pagination = ({ currentCanvasId, navigation, onCanvasChange, onPrevious, o
 
   // Get current active canvas ID from navigation
   const currentActiveCanvasId = navigation?.current_active_canvas?.id;
-  const isViewingCurrentCanvas = currentCanvasId === currentActiveCanvasId;
-
   // Build canvas numbers array (display canvas IDs in descending order)
   // Canvas IDs go: 1, 2, 3, 4, 5, 6 (oldest to newest)
   // Display order: 6, 5, 4, 3, 2, 1 (showing actual canvas IDs, newest to oldest)
@@ -35,7 +33,6 @@ const Pagination = ({ currentCanvasId, navigation, onCanvasChange, onPrevious, o
         pages.push(<span key="dots1" className="px-2 text-white">...</span>);
       }
     }
-    
     // Show canvas IDs around current canvas
     for (let id = Math.min(totalCanvases, currentCanvasId + 1); id >= Math.max(1, currentCanvasId - 1); id--) {
       pages.push(
@@ -52,7 +49,6 @@ const Pagination = ({ currentCanvasId, navigation, onCanvasChange, onPrevious, o
         </button>
       );
     }
-    
     // Always show oldest canvas (canvas ID 1)
     if (currentCanvasId > 2) {
       if (currentCanvasId > 3) {

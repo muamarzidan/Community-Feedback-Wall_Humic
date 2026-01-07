@@ -2,8 +2,8 @@ import { useCallback, useMemo } from 'react';
 import useImage from 'use-image';
 import { Group, Rect, Text, Image } from 'react-konva';
 
-import { formatReactionCount } from '../utils/formatReactionCounts.js';
-import { formatDate } from '../utils/formatDate.js';
+import { formatReactionCount } from '../../utils/formatReactionCounts.js';
+import { formatDate } from '../../utils/formatDate.js';
 
 
 

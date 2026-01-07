@@ -340,23 +340,19 @@ export const useCanvasNotes = () => {
     };
   };
 
-  // Navigation methods
   const goToCanvas = (canvasId) => {
     fetchCanvasByID(canvasId);
   };
-
   const goToPreviousCanvas = () => {
     if (navigation?.previous_canvas) {
       fetchCanvasByID(navigation.previous_canvas.id);
     }
   };
-
   const goToNextCanvas = () => {
     if (navigation?.next_canvas) {
       fetchCanvasByID(navigation.next_canvas.id);
     }
   };
-
   const goToCurrentActiveCanvas = () => {
     if (navigation?.current_active_canvas) {
       fetchCanvasByID(navigation.current_active_canvas.id);

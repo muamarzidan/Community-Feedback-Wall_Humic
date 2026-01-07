@@ -2,60 +2,76 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Mail, UserPlus } from 'lucide-react';
 
-import Layout from '@/components/Layout';
-import AmarProfile from '@/assets/images/profile.jpg';
-import FigmaIcon from '@/assets/icons/figma-agora.png';
+import Layout from '@/components/common/Layout';
+import DifaProfile from '@/assets/images/profile-difa-agora.jpeg';
+import RheaProfile from '@/assets/images/profile-rhea-agora.jpeg';
+import AmarProfile from '@/assets/images/profile-amar-agora.jpg';
+import FigmaIcon from '@/assets/icons/figma-logo_agora_communityfeedback.png';
+import JavascripIcon from '@/assets/icons/js-logo_agora_communityfeedback.png';
+import ReactIcon from '@/assets/icons/react-logo_agora_communityfeedback.png';
+import TailwindIcon from '@/assets/icons/tailwind-logo_agora_communityfeedback.png';
+import LaravelIcon from '@/assets/icons/laravel-logo_agora_communityfeedback.png';
+import PhpIcon from '@/assets/icons/php-logo_agora_communityfeedback.png';
+import MySqlIcon from '@/assets/icons/mysql-logo_agora_communityfeedback.png';
+import PostmanIcon from '@/assets/icons/postman-logo_agora_communityfeedback.png';
+import ReactKonvaIcon from '@/assets/icons/react-konva-logo_agora_communityfeedback.png';
+import ViteIcon from '@/assets/icons/vite-logo_agora_communityfeedback.png';
 
+
+const toolIcons = {
+    Figma: FigmaIcon,
+    Figjam: FigmaIcon,
+    JavaScript: JavascripIcon,
+    "React Vite": ReactIcon,
+    React: ReactIcon,
+    "Tailwind CSS": TailwindIcon,
+    PHP: PhpIcon,
+    "Laravel 12": LaravelIcon,
+    MySQL: MySqlIcon,
+    Postman: PostmanIcon,
+    "React-Konva": ReactKonvaIcon,
+    Vite: ViteIcon,
+};
 
 const teamMembers = [
     {
         name: "Difa Rindang Utari",
         alt: "Profile Difa Rindang Utari - Agora",
         role: "UI/UX Designer",
-        description: "Fokus pada user experience, prototyping, dan sistem desain. Sering menulis dokumentasi & membuat komponen reusable.",
-        tools: ["Figma", "Figjam", "AI"],
+        description: "Fokus pada user interface, experience, untuk menciptakan desain yang menarik dan fungsional.",
+        tools: ["Figma", "Figjam"],
         bgColor: "bg-[#F3E8FF]",
-        image: AmarProfile,
-        linkedin: "https://www.linkedin.com/in/difa-rindang-utari/",
-        email: "difa@gmail.com"
+        image: DifaProfile,
+        linkedin: "https://www.linkedin.com/in/difarindangutari/",
+        email: "difarindangutarii@gmail.com"
     },
     {
         name: "Arya Jagadditha",
         alt: "Profile Arya Jagadditha - Agora",
-        role: "Backend Engineer",
+        role: "Backend Developer",
         description: "Menangani API, database, dan optimasi performa server-side untuk memastikan integrasi lancar.",
-        tools: ["PHP", "Laravel", "MySQL"],
+        tools: ["PHP", "Laravel 12", "MySQL", "Postman"],
         bgColor: "bg-[#FFE8E8]",
-        image: AmarProfile,
-        linkedin: "https://www.linkedin.com/in/arya-jagadditha/",
-        email: "arya@gmail.com"
+        image: RheaProfile,
+        linkedin: "https://www.linkedin.com/in/jagadditha/",
+        email: "ajagadditha@gmail.com"
     },
     {
         name: "Muamar Zidan Tri Antoro",
         alt: "Profile Muamar Zidan Tri Antoro - Agora",
         role: "Frontend Developer",
         description: "Membangun antarmuka yang interaktif dan cepat dengan React dan Tailwind CSS.",
-        tools: ["JavaScript", "React", "Tailwind"],
+        tools: ["JavaScript", "React Vite", "Tailwind CSS", "React-Konva"],
         bgColor: "bg-[#E8F4F8]",
         image: AmarProfile,
-        linkedin: "https://www.linkedin.com/in/muamar-zidan-tri-antoro/",
-        email: "muamar@gmail.com"
-    },
-    {
-        name: "Muhammad Dani Arya Putra",
-        alt: "Profile Muhammad Dani Arya Putra - Agora",
-        role: "Mobile Developer",
-        description: "Mengembangkan aplikasi mobile cross-platform menggunakan Flutter untuk pengalaman pengguna yang mulus.",
-        tools: ["Dart", "Flutter"],
-        bgColor: "bg-[#FFF8E8]",
-        image: AmarProfile,
-        linkedin: "https://www.linkedin.com/in/muhammad-dani-arya-putra/",
-        email: "dani@gmail.com"
+        linkedin: "https://www.linkedin.com/in/muamarzidan/",
+        email: "codeofomiru11@gmail.com"
     }
 ];
+
 export default function AboutPage() {
     const [searchTerm, setSearchTerm] = useState('');
-    
+
     const filteredMembers = teamMembers.filter((member) => {
         const term = searchTerm.toLowerCase();
         return (
@@ -98,12 +114,12 @@ export default function AboutPage() {
                     <div className="mt-6 space-y-5 sm:space-y-16 sm:mt-16">
                         {filteredMembers.length > 0 ? (
                             filteredMembers.map((member, index) => (
-                                <div 
+                                <div
                                     key={index}
                                     className={`flex flex-col ${index % 2 === 1 ? 'md:flex-row' : 'md:flex-row-reverse'} gap-8 sm:items-center border sm:border-b sm:border-x-0 sm:border-t-0 rounded-xl sm:rounded-0 border-gray-300 p-4 sm:pb-12`}
                                 >
                                     {/* Image Profile */}
-                                    <img 
+                                    <img
                                         src={member.image}
                                         alt={member.alt}
                                         className="object-cover w-full h-full max-w-17 max-h-17 sm:max-w-[470px] sm:max-h-[314px] xl:max-w-[570px] xl:max-h-[414px] flex-shrink-0 rounded-full sm:rounded-none"
@@ -131,13 +147,13 @@ export default function AboutPage() {
                                             <div className="text-sm font-bold text-black sm:text-lg xl:text-2xl">Tools:</div>
                                             <div className="flex flex-wrap gap-2">
                                                 {member.tools.map((tool, idx) => (
-                                                    <span 
+                                                    <span
                                                         key={idx}
                                                         className="flex items-center gap-2 px-3 py-2 text-xs text-black bg-gray-100 border border-gray-200 rounded-full xl:px-4 sm:text-sm xl:text-base"
                                                     >
                                                         <img
-                                                            src={FigmaIcon}
-                                                            alt="Tools Figma - Agora"
+                                                            src={toolIcons[tool]}
+                                                            alt={`Tools ${tool} - Agora`}
                                                             className="object-contain w-4 h-4 xl:h-5 xl:w-5"
                                                         />
                                                         {tool}
@@ -151,7 +167,7 @@ export default function AboutPage() {
                                                 <UserPlus className="w-5 h-5" />
                                                 Connect
                                             </Link>
-                                            <Link to={`mailto:${member.email}`} target='_blank'  className="flex items-center justify-center w-full gap-2 px-3 text-xs transition-all rounded-full cursor-pointer sm:px-4 xl:px-6 sm:w-fit sm:text-base xl:text-xl text-primary-500 bg-primary-50 hover:bg-primary-100">
+                                            <Link to={`mailto:${member.email}`} target='_blank' className="flex items-center justify-center w-full gap-2 px-3 text-xs transition-all rounded-full cursor-pointer sm:px-4 xl:px-6 sm:w-fit sm:text-base xl:text-xl text-primary-500 bg-primary-50 hover:bg-primary-100">
                                                 <Mail className="w-5 h-5" />
                                                 Email
                                             </Link>
@@ -170,4 +186,4 @@ export default function AboutPage() {
             </div>
         </Layout>
     );
-}; 
+};

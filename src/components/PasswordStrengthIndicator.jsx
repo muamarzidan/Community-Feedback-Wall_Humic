@@ -1,5 +1,6 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Check, X } from 'lucide-react';
+
 
 const PasswordStrengthIndicator = ({ password }) => {
   const validations = useMemo(() => {

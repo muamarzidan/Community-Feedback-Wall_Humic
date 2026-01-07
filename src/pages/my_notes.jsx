@@ -3,14 +3,14 @@ import { Search, ArrowUp, Pencil, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 
-import { userAPI, listNotesAPI, canvasNotesAPI } from '../../lib/api';
-import { getCurrentUser } from '../../utils/getCurrentUser';
-import ImageViewer from '../../components/notes/ImageViewer';
-import GuestWarningModal from '../../components/auth/GuestWarningModal';
-import NoteModal from '../../components/notes/NoteModal';
-import DeleteConfirmModal from '../../components/notes/DeleteConfirmModal';
-import Layout from '../../components/common/Layout';
-import Toast from '../../components/common/Toast';
+import { userAPI, listNotesAPI, canvasNotesAPI } from '../lib/api';
+import { getCurrentUser } from '../utils/getCurrentUser';
+import ImageViewer from '../components/notes/ImageViewer';
+import GuestWarningModal from '../components/auth/GuestWarningModal';
+import NoteModal from '../components/notes/NoteModal';
+import DeleteConfirmModal from '../components/notes/DeleteConfirmModal';
+import Layout from '../components/common/Layout';
+import Toast from '../components/common/Toast';
 
 
 export default function MyNotesPage() {

@@ -1,9 +1,9 @@
 import { useRef, useEffect, useState } from 'react';
 import { Stage, Layer } from 'react-konva';
 
-import { closeAllMenus } from '../utils/domUtils';
+import { closeAllMenus } from '../../utils/domUtils';
 import NoteCard from './NoteCard';
-import BackgroundCanvas from "../assets/images/backgorund-canvas.png";
+import BackgroundCanvas from "../../assets/images/backgorund-canvas.png";
 
 
 const NotesCanvas = ({ 
@@ -74,17 +74,12 @@ const NotesCanvas = ({
       onStageClick?.(e);
     };
   };
-  // Prevent stage from getting confused when menu is clicked
   const handleClick = (e) => {
     // Let the event bubble up if it's not directly on the stage
     if (e.target !== e.target.getStage()) {
       return;
     };
   };
-
-  console.table("mapping notes:", 
-    notes.map(note => note.id)
-  );
 
 
   return (

@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LogIn, Menu, X, SquareLibrary } from 'lucide-react';
+import { LogIn, Menu, X } from 'lucide-react';
 
-import { useCursorMode } from '../contexts/CursorModeContext';
-import { useAuth } from '../contexts/AuthContext';
-import HomeIcon from '@/assets/icons/home-agora.png';
-import ListIcon from '../assets/icons/listnote-agora.png';
-import AboutIcon from '../assets/icons/about-agora.png';
-import MyNotesIcon from '../assets/icons/mynotes-agora.svg';
-import AuthModal from './AuthModal';
+import { useCursorMode } from '../../contexts/CursorModeContext';
+import { useAuth } from '../../contexts/AuthContext';
+import AuthModal from '../auth/AuthModal';
+import HomeIcon from '../../assets/icons/home-logo_agora_communityfeedback.png';
+import ListIcon from '../../assets/icons/listnote-logo_agora_communityfeedback.png';
+import AboutIcon from '../../assets/icons/about-logo_agora_communityfeedback.png';
+import MyNotesIcon from '../../assets/icons/mynotes-logo_agora_communityfeedback.svg';
 
 
 const Sidebar = () => {
@@ -84,8 +84,8 @@ const Sidebar = () => {
             {/* Logo & Menu */}
             <div className='space-y-8'>
                 {/* Logo */}
-                <div className="flex items-center justify-center w-14 h-14 bg-[url('@/assets/icons/logo-agora.png')] bg-contain bg-center bg-no-repeat">
-                </div>
+                <Link to="/" className="flex items-center justify-center w-14 h-14 bg-[url('@/assets/icons/logo_agora_communityfeedback.png')] bg-contain bg-center bg-no-repeat">
+                </Link>
                 {/* Menu Items */}
                 <div className="flex flex-col gap-4">
                     {menuItems.map((item, index) => (
@@ -137,7 +137,7 @@ const Sidebar = () => {
             <div className="fixed top-0 left-0 right-0 z-[55] flex items-center justify-between h-16 px-4 bg-white border-b border-gray-200 shadow-sm">
                 {/* Logo */}
                 <div className="flex items-center">
-                    <div className="w-10 h-10 bg-[url('@/assets/icons/logo-agora.png')] bg-contain bg-center bg-no-repeat"></div>
+                    <div className="w-10 h-10 bg-[url('@/assets/icons/logo_agora_communityfeedback.png')] bg-contain bg-center bg-no-repeat"></div>
                     <span className="ml-2 text-lg font-bold text-primary-600">Nexora</span>
                 </div>
                 {/* Hamburger Menu */}
@@ -162,7 +162,7 @@ const Sidebar = () => {
                         {/* Header */}
                         <div className="flex items-center justify-between p-4 border-b border-gray-200">
                             <div className="flex items-center">
-                                <div className="w-8 h-8 bg-[url('@/assets/icons/logo-agora.png')] bg-contain bg-center bg-no-repeat"></div>
+                                <div className="w-8 h-8 bg-[url('@/assets/icons/logo_agora_communityfeedback.png')] bg-contain bg-center bg-no-repeat"></div>
                                 <span className="ml-2 text-lg font-bold text-primary-500">Agora</span>
                             </div>
                             {/* Close Button */}
