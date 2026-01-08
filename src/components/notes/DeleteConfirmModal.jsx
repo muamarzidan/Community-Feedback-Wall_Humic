@@ -13,7 +13,7 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, noteTitle = '' }) => {
                         <AlertTriangle className="w-8 h-8 text-red-600" />
                     </div>
                 </div>
-                {/* Content */}
+                {/* Main Content */}
                 <div className="p-6 text-center">
                     <h3 className="mb-2 text-xl font-bold text-gray-900">
                         Delete Note?

@@ -27,7 +27,6 @@ export const usePagination = (items, itemsPerPage = 5) => {
     goToPage(currentPage - 1);
   };
 
-  // Reset to page 1 if current page is beyond total pages
   if (currentPage > totalPages && totalPages > 0) {
     setCurrentPage(1);
   };

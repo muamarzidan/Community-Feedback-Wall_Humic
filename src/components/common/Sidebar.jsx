@@ -107,7 +107,6 @@ const Sidebar = () => {
             {/* Profile */}
             <div className="flex flex-col items-center gap-2">
                 {!isAuthenticated ? (
-                    /* If not authenticated */
                     <button
                         onClick={handleGuestClick}
                         className="flex items-center justify-center w-12 h-12 text-white transition-colors bg-gray-400 rounded-full cursor-pointer hover:bg-gray-500"
@@ -116,7 +115,6 @@ const Sidebar = () => {
                         <span className="text-xs font-bold text-white">G</span>
                     </button>
                 ) : (
-                    /* If authenticated */
                     <Link
                         to="/profile"
                         className="flex items-center justify-center w-12 h-12 text-white transition-colors rounded-full cursor-pointer bg-primary-500 hover:bg-primary-600"

@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { FcGoogle } from "react-icons/fc";
 import { HiOutlineEyeOff, HiOutlineEye } from "react-icons/hi";
+import { checkRateLimit, recordAttempt, formatRemainingTime } from '@/utils/rateLimiter';
 
 
 import { useAuth } from '@/contexts/AuthContext';
@@ -25,7 +26,32 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
         password_confirmation: '',
         remember_me: false
     });
+    const [rateLimit, setRateLimit] = useState({
+        isBlocked: false,
+        remainingTime: 0
+    });
 
+    // Check rate limit on mount dan setiap detik jika blocked
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const checkLimit = () => {
+            const limit = checkRateLimit();
+            setRateLimit(limit);
+        };
+
+        checkLimit();
+
+        // Update countdown setiap detik jika blocked
+        let interval;
+        if (rateLimit.isBlocked && rateLimit.remainingTime > 0) {
+            interval = setInterval(checkLimit, 1000);
+        }
+
+        return () => {
+            if (interval) clearInterval(interval);
+        };
+    }, [isOpen, rateLimit.isBlocked]);
     
     if (!isOpen) return null;
 
@@ -40,9 +66,21 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+
+        // Check rate limit before submit
+        const limit = checkRateLimit();
+        if (limit.isBlocked) {
+            setError(`Too many ${mode === 'login' ? 'login' : 'registration'} attempts. Please wait ${formatRemainingTime(limit.remainingTime)} before trying again.`);
+            setRateLimit(limit);
+            return;
+        }
+
         setLoading(true);
 
         try {
+            // Record attempt
+            recordAttempt();
+
             if (mode === 'login') {
                 const result = await login({
                     email: formData.email,
@@ -55,6 +93,10 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                     window.location.reload();
                 } else {
                     setError(result.message);
+                    
+                    // Check if rate limited after this attempt
+                    const newLimit = checkRateLimit();
+                    setRateLimit(newLimit);
                 };
             } else {
                 if (formData.password !== formData.password_confirmation) {
@@ -74,6 +116,10 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                     onClose();
                 } else {
                     setError(result.message);
+                    
+                    // Check if rate limited after this attempt
+                    const newLimit = checkRateLimit();
+                    setRateLimit(newLimit);
                 };
             };
         } catch (err) {
@@ -127,8 +173,9 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                                     value={formData.email}
                                     onChange={handleChange}
                                     placeholder="Email"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                                     required
+                                    disabled={rateLimit.isBlocked || loading}
                                 />
                             </div>
                             <div className="relative">
@@ -138,13 +185,15 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                                     value={formData.password}
                                     onChange={handleChange}
                                     placeholder="Password"
-                                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                                     required
+                                    disabled={rateLimit.isBlocked || loading}
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute text-gray-400 transition-colors right-3 top-2.5 hover:text-gray-600"
+                                    className="absolute text-gray-400 transition-colors right-3 top-2.5 hover:text-gray-600 disabled:opacity-50"
+                                    disabled={rateLimit.isBlocked || loading}
                                 >
                                     {showPassword ? (
                                         <HiOutlineEye className="w-5 h-5 !cursor-pointer" />
@@ -170,10 +219,15 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                             </div>
                             <button
                                 type="submit"
-                                className="w-full py-2 mt-4 text-white transition bg-indigo-500 rounded-md hover:bg-indigo-600 disabled:bg-gray-400 disabled:cursor-not-allowed !cursor-pointer"
-                                disabled={loading}
+                                className="w-full py-2 mt-4 text-white transition bg-indigo-500 rounded-md cursor-pointer hover:bg-indigo-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                disabled={loading || rateLimit.isBlocked}
                             >
-                                {loading ? 'Loading...' : 'Login'}
+                                {rateLimit.isBlocked
+                                    ? `Wait ${formatRemainingTime(rateLimit.remainingTime)}`
+                                    : loading
+                                    ? 'Loading...'
+                                    : 'Login'
+                                }
                             </button>
                             <p className="text-sm text-center text-gray-600">
                                 Don't have an account?{" "}
@@ -217,8 +271,9 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                                     value={formData.name}
                                     onChange={handleChange}
                                     placeholder="Full Name"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                                     required
+                                    disabled={rateLimit.isBlocked || loading}
                                 />
                             </div>
                             <div>
@@ -228,8 +283,9 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                                     value={formData.email}
                                     onChange={handleChange}
                                     placeholder="Email"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                                     required
+                                    disabled={rateLimit.isBlocked || loading}
                                 />
                             </div>
                             <div className="relative">
@@ -239,13 +295,15 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                                     value={formData.password}
                                     onChange={handleChange}
                                     placeholder="Password"
-                                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                                     required
+                                    disabled={rateLimit.isBlocked || loading}
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute text-gray-400 transition-colors right-3 top-2.5 hover:text-gray-600"
+                                    className="absolute text-gray-400 transition-colors right-3 top-2.5 hover:text-gray-600 disabled:opacity-50"
+                                    disabled={rateLimit.isBlocked || loading}
                                 >
                                     {showPassword ? (
                                         <HiOutlineEye className="w-5 h-5 !cursor-pointer" />
@@ -260,13 +318,15 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                                     value={formData.password_confirmation}
                                     onChange={handleChange}
                                     placeholder="Confirm Password"
-                                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                                     required
+                                    disabled={rateLimit.isBlocked || loading}
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                    className="absolute text-gray-400 transition-colors right-3 top-2.5 hover:text-gray-600"
+                                    className="absolute text-gray-400 transition-colors right-3 top-2.5 hover:text-gray-600 disabled:opacity-50"
+                                    disabled={rateLimit.isBlocked || loading}
                                 >
                                     {showConfirmPassword ? (
                                         <HiOutlineEye className="w-5 h-5 !cursor-pointer" />
@@ -291,9 +351,14 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                             <button
                                 type="submit"
                                 className="w-full py-2 mt-4 text-white transition bg-indigo-500 rounded-md hover:bg-indigo-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                                disabled={loading}
+                                disabled={loading || rateLimit.isBlocked}
                             >
-                                {loading ? 'Creating...' : 'Create account'}
+                                {rateLimit.isBlocked
+                                    ? `Wait ${formatRemainingTime(rateLimit.remainingTime)}`
+                                    : loading
+                                    ? 'Creating...'
+                                    : 'Create account'
+                                }
                             </button>
                             <p className="text-sm text-center text-gray-600">
                                 Already have an account?{" "}

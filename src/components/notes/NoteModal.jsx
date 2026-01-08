@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
+import { validateImageDimension } from '@/utils/imageValidator';
 
 
 const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
@@ -12,6 +13,8 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
     imagePreview: null,
     delete_image: false
   });
+  const [imageLoading, setImageLoading] = useState(false);
+  const [imageError, setImageError] = useState('');
   
   const colorOptions = [
     { name: 'Yellow', value: '#FFFB00' },
@@ -76,25 +79,53 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
       [field]: value
     }));
   };
-  const handleImageChange = (e) => {
+  const handleImageChange = async (e) => {
     const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert('Image size must be less than 5MB');
-        return;
-      };
-      if (!['image/jpeg', 'image/jpg', 'image/png', 'image/pdf'].includes(file.type)) {
-        alert('Only JPG, PNG, or PDF files are allowed');
-        return;
-      };
+    if (!file) return;
 
+    setImageLoading(true);
+    setImageError('');
+
+    try {
+      // File size check (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setImageError('Image size must be less than 5MB');
+        setImageLoading(false);
+        return;
+      }
+
+      // File type check
+      if (!['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(file.type)) {
+        setImageError('Only JPG, PNG, or WEBP files are allowed');
+        setImageLoading(false);
+        return;
+      }
+
+      // Validate image dimension (max 3000x3000)
+      const result = await validateImageDimension(file);
+
+      if (!result.isValid) {
+        setImageError(result.message);
+        setImageLoading(false);
+        return;
+      }
+
+      // Dimension valid, use original file
       setFormData(prev => ({
         ...prev,
-        image: file,
-        imagePreview: URL.createObjectURL(file),
+        image: result.file,
+        imagePreview: URL.createObjectURL(result.file),
         delete_image: false
       }));
-    };
+
+      // Clear any previous errors
+      setImageError('');
+    } catch (error) {
+      console.error('Error processing image:', error);
+      setImageError('Failed to process image. Please try again.');
+    } finally {
+      setImageLoading(false);
+    }
   };
   const handleRemoveImage = () => {
     setFormData(prev => ({
@@ -193,8 +224,19 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
           {isAuthenticated() && (
             <div>
               <label className="block mb-2 text-sm font-medium text-gray-700">
-                Image (Optional)
+                Image (Optional - Max 3000x3000px)
               </label>
+              
+              {/* Error/Info Message */}
+              {imageError && (
+                <div className={`mb-2 p-2 text-sm rounded-lg ${
+                  imageError.startsWith('✓') 
+                    ? 'bg-green-100 text-green-700 border border-green-300' 
+                    : 'bg-red-100 text-red-700 border border-red-300'
+                }`}>
+                  {imageError}
+                </div>
+              )}
               
               {formData.imagePreview ? (
                 <div className="relative">
@@ -207,33 +249,38 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
                     type="button"
                     onClick={handleRemoveImage}
                     className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                    disabled={imageLoading}
                   >
                     <X className="w-4 h-4" />
                   </button>
+                  {imageLoading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-lg">
+                      <div className="w-8 h-8 border-4 border-white rounded-full border-t-transparent animate-spin"></div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="relative">
                   <input
                     type="file"
-                    accept="image/jpeg,image/jpg,image/png,application/pdf"
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
                     onChange={handleImageChange}
-                    className="hidden"
-                    id="image-upload"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    disabled={imageLoading}
                   />
-                  <label
-                    htmlFor="image-upload"
-                    className="flex flex-col items-center justify-center w-full h-32 transition-colors border-2 border-gray-300 border-dashed rounded-lg cursor-pointer hover:border-gray-400"
-                  >
-                    <div className="flex flex-col items-center">
-                      <svg className="w-8 h-8 mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                      </svg>
-                      <span className="text-sm text-gray-500">Click to upload image</span>
-                      <span className="mt-1 text-xs text-gray-400">JPG, PNG, or PDF (max 5MB)</span>
+                  {imageLoading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 border-4 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
+                        <span className="text-sm text-gray-600">Processing image...</span>
+                      </div>
                     </div>
-                  </label>
+                  )}
                 </div>
               )}
+              <p className="mt-1 text-xs text-gray-500">
+                JPG, PNG or WEBP. Max 5MB and 3000x3000px dimension.
+              </p>
             </div>
           )}
           {/* Action Buttons */}

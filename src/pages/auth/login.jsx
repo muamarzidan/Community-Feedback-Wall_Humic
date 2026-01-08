@@ -5,6 +5,7 @@ import { IoArrowBack } from "react-icons/io5";
 import { HiOutlineEyeOff, HiOutlineEye } from "react-icons/hi";
 
 import { useAuth } from '@/contexts/AuthContext';
+import { checkRateLimit, recordAttempt, formatRemainingTime } from '@/utils/rateLimiter';
 import LoginBanner from '@/assets/images/login-banner-agora.webp';
 import logoAgora from '@/assets/icons/logo_agora_communityfeedback.png';
 
@@ -20,6 +21,10 @@ export default function LoginPage() {
         password: '',
         remember_me: false
     });
+    const [rateLimit, setRateLimit] = useState({
+        isBlocked: false,
+        remainingTime: 0
+    });
 
     
     // Reset cursor to default on auth pages
@@ -29,6 +34,26 @@ export default function LoginPage() {
             document.body.style.cursor = '';
         };
     }, []);
+
+    // Check rate limit on mount dan setiap detik jika blocked
+    useEffect(() => {
+        const checkLimit = () => {
+            const limit = checkRateLimit();
+            setRateLimit(limit);
+        };
+
+        checkLimit();
+
+        // Update countdown setiap detik jika blocked
+        let interval;
+        if (rateLimit.isBlocked && rateLimit.remainingTime > 0) {
+            interval = setInterval(checkLimit, 1000);
+        }
+
+        return () => {
+            if (interval) clearInterval(interval);
+        };
+    }, [rateLimit.isBlocked]);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -41,14 +66,30 @@ export default function LoginPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+
+        // Check rate limit before submit
+        const limit = checkRateLimit();
+        if (limit.isBlocked) {
+            setError(`Too many login attempts. Please wait ${formatRemainingTime(limit.remainingTime)} before trying again.`);
+            setRateLimit(limit);
+            return;
+        }
+
         setLoading(true);
 
         try {
+            // Record attempt
+            recordAttempt();
+
             const result = await login(formData);
             if (result.success) {
                 navigate('/');
             } else {
                 setError(result.message);
+                
+                // Check if rate limited after this attempt
+                const newLimit = checkRateLimit();
+                setRateLimit(newLimit);
             };
         } catch (err) {
             setError('Terjadi kesalahan. Silakan coba lagi.');
@@ -87,8 +128,9 @@ export default function LoginPage() {
                                 value={formData.email}
                                 onChange={handleChange}
                                 placeholder="Email"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                                 required
+                                disabled={rateLimit.isBlocked || loading}
                             />
                         </div>
                         <div className="relative">
@@ -98,13 +140,15 @@ export default function LoginPage() {
                                 value={formData.password}
                                 onChange={handleChange}
                                 placeholder="Password"
-                                className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                                 required
+                                disabled={rateLimit.isBlocked || loading}
                             />
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                                className={`${rateLimit.isBlocked || loading ? 'opacity-50 !cursor-not-allowed' : ''} absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 disabled:opacity-50`}
+                                disabled={rateLimit.isBlocked || loading}
                             >
                                 {showPassword ? (
                                     <HiOutlineEye className="w-5 h-5 !cursor-pointer" />
@@ -120,7 +164,8 @@ export default function LoginPage() {
                                     name="remember_me"
                                     checked={formData.remember_me}
                                     onChange={handleChange}
-                                    className="accent-indigo-500" 
+                                    className="accent-indigo-500 disabled:cursor-not-allowed" 
+                                    disabled={rateLimit.isBlocked || loading}
                                 />
                                 Remember me
                             </label>
@@ -130,10 +175,15 @@ export default function LoginPage() {
                         </div>
                         <button
                             type="submit"
-                            className="!cursor-pointer w-full py-2 text-white transition bg-indigo-500 rounded-md hover:bg-indigo-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                            disabled={loading}
+                            className="w-full py-2 text-white transition bg-indigo-500 rounded-md cursor-pointer hover:bg-indigo-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                            disabled={loading || rateLimit.isBlocked}
                         >
-                            {loading ? 'Loading...' : 'Login'}
+                            {rateLimit.isBlocked 
+                                ? `Wait ${formatRemainingTime(rateLimit.remainingTime)}` 
+                                : loading 
+                                ? 'Loading...' 
+                                : 'Login'
+                            }
                         </button>
                         <p className="text-sm text-center text-gray-600">
                             Don't have an account?{" "}

@@ -49,13 +49,11 @@ export const useCanvasNotes = () => {
           grid: data.grid,
         });
         
-        // Transform notes
         const transformedNotes = apiNotes.map((note, index) => 
           transformNoteFromAPI(note, index)
         );
         setNotes(transformedNotes);
         
-        // Fetch canvas info for navigation
         fetchCanvasInfo(data.canvas_id);
       }
     } catch (err) {

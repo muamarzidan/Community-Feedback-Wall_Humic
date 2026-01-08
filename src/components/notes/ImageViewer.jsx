@@ -54,7 +54,7 @@ const ImageViewer = ({ isOpen, imageUrl, onClose }) => {
                     <span className="font-medium">Close</span>
                 </button>
             </div>
-            {/* Background Click Hint */}
+            {/* Hint */}
             {/* <div className="absolute text-sm text-white/60 top-4 right-4">
                 Press ESC or click outside to close
             </div> */}

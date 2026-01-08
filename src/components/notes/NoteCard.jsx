@@ -19,7 +19,7 @@ const svgDelete = `
 </svg>
 `;
 
-const SvgIcon = ({ svg, x, y, size = 12, onClick, cursorMode, onMouseEnter, onMouseLeave }) => {
+const SvgIcon = ({ svg, x, y, size = 12, onClick, onMouseEnter, onMouseLeave }) => {
   const [icon] = useImage(
     `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`
   );

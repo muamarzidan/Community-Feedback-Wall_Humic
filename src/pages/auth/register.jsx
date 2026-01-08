@@ -5,6 +5,7 @@ import { IoArrowBack } from "react-icons/io5";
 import { HiOutlineEyeOff, HiOutlineEye } from "react-icons/hi";
 
 import { useAuth } from '@/contexts/AuthContext';
+import { checkRateLimit, recordAttempt, formatRemainingTime } from '@/utils/rateLimiter';
 import PasswordStrengthIndicator from '@/components/PasswordStrengthIndicator';
 import RegisterBanner from '@/assets/images/register-banner-agora.webp';
 import logoAgora from '@/assets/icons/logo_agora_communityfeedback.png';
@@ -23,6 +24,10 @@ export default function SignUpPage() {
         password: '',
         password_confirmation: ''
     });
+    const [rateLimit, setRateLimit] = useState({
+        isBlocked: false,
+        remainingTime: 0
+    });
 
     // Reset cursor to default on auth pages
     useEffect(() => {
@@ -31,6 +36,26 @@ export default function SignUpPage() {
             document.body.style.cursor = '';
         };
     }, []);
+
+    // Check rate limit on mount dan setiap detik jika blocked
+    useEffect(() => {
+        const checkLimit = () => {
+            const limit = checkRateLimit();
+            setRateLimit(limit);
+        };
+
+        checkLimit();
+
+        // Update countdown setiap detik jika blocked
+        let interval;
+        if (rateLimit.isBlocked && rateLimit.remainingTime > 0) {
+            interval = setInterval(checkLimit, 1000);
+        }
+
+        return () => {
+            if (interval) clearInterval(interval);
+        };
+    }, [rateLimit.isBlocked]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -44,6 +69,14 @@ export default function SignUpPage() {
         e.preventDefault();
         setError('');
 
+        // Check rate limit before submit
+        const limit = checkRateLimit();
+        if (limit.isBlocked) {
+            setError(`Too many registration attempts. Please wait ${formatRemainingTime(limit.remainingTime)} before trying again.`);
+            setRateLimit(limit);
+            return;
+        }
+
         if (formData.password !== formData.password_confirmation) {
             setError('Password dan konfirmasi password tidak cocok');
             return;
@@ -52,11 +85,18 @@ export default function SignUpPage() {
         setLoading(true);
 
         try {
+            // Record attempt
+            recordAttempt();
+
             const result = await register(formData);
             if (result.success) {
                 navigate('/');
             } else {
                 setError(result.message);
+                
+                // Check if rate limited after this attempt
+                const newLimit = checkRateLimit();
+                setRateLimit(newLimit);
             };
         } catch (err) {
             setError('Terjadi kesalahan. Silakan coba lagi.');
@@ -107,8 +147,9 @@ export default function SignUpPage() {
                                 value={formData.name}
                                 onChange={handleChange}
                                 placeholder="Full Name"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                                 required
+                                disabled={rateLimit.isBlocked || loading}
                             />
                         </div>
                         <div>
@@ -118,15 +159,17 @@ export default function SignUpPage() {
                                 value={formData.email}
                                 onChange={handleChange}
                                 placeholder="Email"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                                 required
+                                disabled={rateLimit.isBlocked || loading}
                             />
                         </div>
                         <div>
                             <input
                                 type="tel"
                                 placeholder="Phone Number"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                disabled={rateLimit.isBlocked || loading}
                             />
                         </div>
                         <div className="relative">
@@ -136,13 +179,15 @@ export default function SignUpPage() {
                                 value={formData.password}
                                 onChange={handleChange}
                                 placeholder="Password"
-                                className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                                 required
+                                disabled={rateLimit.isBlocked || loading}
                             />
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                                className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                                disabled={rateLimit.isBlocked || loading}
                             >
                                 {showPassword ? (
                                     <HiOutlineEye className="w-5 h-5 !cursor-pointer" />
@@ -159,21 +204,35 @@ export default function SignUpPage() {
                                 value={formData.password_confirmation}
                                 onChange={handleChange}
                                 placeholder="Confirm Password"
-                                className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                                 required
+                                disabled={rateLimit.isBlocked || loading}
                             />
                             <button
                                 type="button"
                                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                                className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                                disabled={rateLimit.isBlocked || loading}
                             >
                                 {showConfirmPassword ? (
                                     <HiOutlineEye className="w-5 h-5 !cursor-pointer" />
-                                ) : (   
+                                ) : (
                                     <HiOutlineEyeOff className="w-5 h-5 !cursor-pointer" />
                                 )}
                             </button>
                         </div>
+                        <button
+                            type="submit"
+                            className="!cursor-pointer w-full py-2 text-white transition bg-primary-500 rounded-md hover:bg-primary-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                            disabled={loading || rateLimit.isBlocked}
+                        >
+                            {rateLimit.isBlocked 
+                                ? `Wait ${formatRemainingTime(rateLimit.remainingTime)}` 
+                                : loading 
+                                ? 'Creating Account...' 
+                                : 'Create Account'
+                            }
+                        </button>
                         <div className="flex items-start gap-2 text-sm text-gray-600">
                             <input type="checkbox" className="mt-1 cursor-pointer accent-primary-500" required />
                             <p>
@@ -187,13 +246,6 @@ export default function SignUpPage() {
                                 </a>
                             </p>
                         </div>
-                        <button
-                            type="submit"
-                            className="w-full py-2 text-white transition-colors rounded-lg cursor-pointer bg-primary-500 hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                            disabled={loading}
-                        >
-                            {loading ? 'Creating...' : 'Create account'}
-                        </button>
                         <p className="text-sm text-center text-gray-600">
                             Already have an account?{" "}
                             <Link to="/login" className="font-medium text-red-500 hover:text-red-600 !cursor-pointer">
