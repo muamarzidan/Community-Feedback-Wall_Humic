@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 
-import { getCurrentUser } from '../utils/getCurrentUser.js';
+import { getCurrentUser } from '../utils/auth/getCurrentUser.js';
 import { canvasNotesAPI } from '../lib/api.js';
 
 
-const GUEST_STORAGE_KEY = 'guest-note-timestamp';
+const GUEST_STORAGE_KEY = 'guest-note-timestamp_community-feedback';
 
 export const useCanvasNotes = () => {
   const [notes, setNotes] = useState([]);
@@ -46,7 +46,7 @@ export const useCanvasNotes = () => {
         setCurrentCanvasId(data.canvas_id);
         setCanvasInfo({
           canvasId: data.canvas_id,
-          grid: data.grid,
+          positioning: data.positioning,
         });
         
         const transformedNotes = apiNotes.map((note, index) => 
@@ -64,7 +64,6 @@ export const useCanvasNotes = () => {
       setLoading(false);
     };
   };
-
   const fetchCanvasInfo = async (canvasId) => {
     try {
       const response = await canvasNotesAPI.getCanvasById(canvasId);
@@ -84,13 +83,11 @@ export const useCanvasNotes = () => {
       console.error('Error fetching canvas info:', err);
     }
   };
-
   const fetchCanvasByID = async (canvasId) => {
     try {
       setLoading(true);
       setError(null);
 
-      // Get notes from specific canvas by ID
       const notesResponse = await canvasNotesAPI.getCanvasNotesByID(canvasId);
       if (notesResponse.data && notesResponse.data.data) {
         const data = notesResponse.data.data;
@@ -100,7 +97,6 @@ export const useCanvasNotes = () => {
         setCanvasInfo({
           canvasId: data.canvas_id,
           canvasCount: data.canvas_count,
-          grid: data.grid,
         });
         
         const transformedNotes = apiNotes.map((note, index) => 
@@ -108,7 +104,6 @@ export const useCanvasNotes = () => {
         );
         setNotes(transformedNotes);
         
-        // Fetch canvas info for navigation
         fetchCanvasInfo(canvasId);
       }
     } catch (err) {
@@ -122,7 +117,6 @@ export const useCanvasNotes = () => {
   const transformNoteFromAPI = (apiNote, index = 0) => {
     const currentUser = getCurrentUser();
     
-    // Determine user type
     let userType = 'guest';
     let authorName = 'Guest';
     
@@ -138,11 +132,10 @@ export const useCanvasNotes = () => {
       authorName = 'Guest';
     };
 
-    // Convert grid position to pixel coordinates
-    // If grid_position exists, use it. Otherwise, calculate from index
-    const position = apiNote.grid_position 
-      ? gridToPixelPosition(apiNote.grid_position)
-      : calculatePositionFromIndex(index);
+    const position = {
+      x: parseFloat(apiNote.x || 0),
+      y: parseFloat(apiNote.y || 0)
+    };
 
     return {
       id: apiNote.id,
@@ -162,41 +155,10 @@ export const useCanvasNotes = () => {
         fire: apiNote.reactions?.fire || 0,
       },
       userReactions: apiNote.user_reactions || [],
-      gridPosition: apiNote.grid_position || null,
       x: position.x,
       y: position.y,
       createdAt: apiNote.created_at,
       updatedAt: apiNote.updated_at,
-    };
-  };
-  // Convert grid position (row, col) to pixel coordinates
-  const gridToPixelPosition = (gridPos) => {
-    const cardWidth = 355; // Base width
-    const cardHeight = 180; // Base height
-    const spacing = 40;
-    const startX = 120;
-    const startY = 80;
-    
-    return {
-      x: startX + (gridPos.col * (cardWidth + spacing)),
-      y: startY + (gridPos.row * (cardHeight + spacing)),
-    };
-  };
-  // Fallback: Calculate position from index when grid_position not available
-  const calculatePositionFromIndex = (index) => {
-    const cardWidth = 355;
-    const cardHeight = 200;
-    const spacing = 40;
-    const cols = 4; // Default 4 columns
-    const startX = 120;
-    const startY = 80;
-    
-    const col = index % cols;
-    const row = Math.floor(index / cols);
-    
-    return {
-      x: startX + (col * (cardWidth + spacing)),
-      y: startY + (row * (cardHeight + spacing)),
     };
   };
   const addNote = async (noteData) => {
@@ -205,11 +167,9 @@ export const useCanvasNotes = () => {
         if (!canGuestCreateNote()) {
           throw new Error('Guest can only create 1 note per day');
         };
-        // Email is required for guest
         if (!noteData.email) {
           throw new Error('Email is required for guest users');
         };
-        // Guest cannot upload images
         if (noteData.image) {
           throw new Error('Guest users cannot upload images');
         };
@@ -219,19 +179,25 @@ export const useCanvasNotes = () => {
         title: noteData.title,
         description: noteData.description,
         color: noteData.backgroundColor?.replace('#', '') || 'fef3c7',
+        height: noteData.height || 0,
       };
-      // Add email for guest
+      
+      console.log('SENDING NOTE TO BACKEND:', {
+        title: apiData.title,
+        height: apiData.height,
+        hasImage: !!(isAuthenticated() && noteData.image),
+        timestamp: new Date().toISOString()
+      });
+      
       if (!isAuthenticated() && noteData.email) {
         apiData.email = noteData.email;
       };
-      // Add image for authenticated users only
       if (isAuthenticated() && noteData.image) {
         apiData.image = noteData.image;
       };
 
       const response = await canvasNotesAPI.createNote(apiData);
       if (response.data) {
-        // Update guest timestamp for 1 note per day limit
         if (!isAuthenticated()) {
           localStorage.setItem(GUEST_STORAGE_KEY, Date.now().toString());
         };
@@ -254,7 +220,16 @@ export const useCanvasNotes = () => {
         title: noteData.title,
         description: noteData.description,
         color: noteData.backgroundColor?.replace('#', '') || 'fef3c7',
+        height: noteData.height || 0,
       };
+      
+      console.log('UPDATING NOTE TO BACKEND:', {
+        noteId: noteId,
+        title: apiData.title,
+        height: apiData.height,
+        hasNewImage: noteData.image instanceof File,
+        timestamp: new Date().toISOString()
+      });
 
       if (noteData.image instanceof File) {
         apiData.image = noteData.image;
@@ -265,7 +240,6 @@ export const useCanvasNotes = () => {
 
       const response = await canvasNotesAPI.updateNote(noteId, apiData);
       if (response.data) {
-        // Refresh current canvas or specific canvas
         if (currentCanvasId) {
           await fetchCanvasByID(currentCanvasId);
         } else {
@@ -286,7 +260,6 @@ export const useCanvasNotes = () => {
 
       await canvasNotesAPI.deleteNote(noteId);
       
-      // Refresh current canvas or specific canvas
       if (currentCanvasId) {
         await fetchCanvasByID(currentCanvasId);
       } else {
@@ -314,7 +287,6 @@ export const useCanvasNotes = () => {
       const apiReactionType = reactionMap[reactionType];
       const response = await canvasNotesAPI.toggleReaction(noteId, apiReactionType);
       if (response.data && response.data.data) {
-        // Update local state
         setNotes(prevNotes => prevNotes.map(note => {
           if (note.id === noteId) {
             return {
@@ -337,7 +309,6 @@ export const useCanvasNotes = () => {
       throw err;
     };
   };
-
   const goToCanvas = (canvasId) => {
     fetchCanvasByID(canvasId);
   };

@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'auth_rate_limit';
+const STORAGE_KEY = 'auth-rate-limit_community-feedback';
 const MAX_ATTEMPTS = 5;
 const TIME_WINDOW = 60 * 1000;
 const COOLDOWN_PERIOD = 5 * 60 * 1000;
@@ -22,7 +22,6 @@ const saveRateLimitData = (data) => {
 };
 
 /**
- * Check apakah user sedang dalam cooldown period
  * @returns {Object} { isBlocked: boolean, remainingTime: number (seconds) }
  */
 export const checkRateLimit = () => {
@@ -98,7 +97,6 @@ export const clearRateLimit = () => {
 };
 
 /**
- * Format remaining time untuk display
  * @param {number} seconds 
  * @returns {string} "5:30" atau "0:45"
  */

@@ -7,13 +7,13 @@ import Layout from './components/common/Layout';
 import NotesCanvas from './components/notes/NotesCanvas';
 import CreateNoteButton from './components/notes/CreateNoteButton';
 import CursorModeToggle from './components/notes/CursorModeToggle';
-import ZoomControls from './components/ZoomControls';
+import ZoomControls from './components/notes/ZoomControl';
 import Pagination from './components/Pagination';
 import NoteModal from './components/notes/NoteModal';
 import GuestWarningModal from './components/auth/GuestWarningModal';
 import ImageViewer from './components/notes/ImageViewer';
 import Toast from './components/common/Toast';
-import DeleteConfirmModal from './components/notes/DeleteConfirmModal';
+import DeleteConfirmModal from './components/notes/DeleteConfirmModalNote';
 import './App.css';
 
 
@@ -103,7 +103,6 @@ function App() {
           type: 'success'
         });
       } else {
-        // Check if guest can create note
         if (!isAuthenticated() && !canGuestCreateNote()) {
           alert('Guest users can only create 1 note per day. Please login to create more notes.');
           return;
@@ -231,7 +230,6 @@ function App() {
           <CursorModeToggle 
             cursorMode={cursorMode}
             onModeChange={(newMode) => {
-              // Close any open menus when changing cursor mode
               closeAllMenus();
               setCursorMode(newMode);
             }}

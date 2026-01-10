@@ -6,7 +6,7 @@ import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
 
 import { listNotesAPI } from '../../lib/api';
-import { getCurrentUser } from '../../utils/getCurrentUser';
+import { getCurrentUser } from '../../utils/auth/getCurrentUser';
 import { formatDateRange } from '../../utils/formatDate';
 import ImageViewer from '../../components/notes/ImageViewer';
 import GuestWarningModal from '../../components/auth/GuestWarningModal';

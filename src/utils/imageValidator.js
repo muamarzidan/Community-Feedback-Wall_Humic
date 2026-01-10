@@ -1,18 +1,11 @@
-/**
- * Image Dimension Validator
- * Max dimension: 3000x3000px
- */
-
 const MAX_DIMENSION = 3000;
 
 /**
- * Validate image dimension (tidak auto-resize, reject jika melebihi)
- * @param {File} file - Image file
+ * @param {File} file
  * @returns {Promise<{isValid: boolean, file: File, message: string}>}
  */
 export const validateImageDimension = (file) => {
   return new Promise((resolve, reject) => {
-    // Check if file is image
     if (!file.type.startsWith('image/')) {
       resolve({
         isValid: false,
@@ -22,7 +15,6 @@ export const validateImageDimension = (file) => {
       return;
     }
 
-    // Create image element untuk check dimension
     const img = new Image();
     const reader = new FileReader();
 
@@ -34,7 +26,6 @@ export const validateImageDimension = (file) => {
       const width = img.width;
       const height = img.height;
 
-      // Check jika dimension valid (tidak melebihi max)
       if (width <= MAX_DIMENSION && height <= MAX_DIMENSION) {
         resolve({
           isValid: true,
@@ -45,11 +36,10 @@ export const validateImageDimension = (file) => {
         return;
       }
 
-      // Image melebihi max dimension, REJECT
       resolve({
         isValid: false,
         file: null,
-        message: `Image dimension (${width}x${height}px) exceeds maximum allowed (${MAX_DIMENSION}x${MAX_DIMENSION}px). Please resize your image before uploading.`,
+        message: `Image dimension (${width}x${height}px) exceeds maximum allowed (${MAX_DIMENSION}x${MAX_DIMENSION}px)`,
         dimension: { width, height },
         maxDimension: MAX_DIMENSION
       });
@@ -68,7 +58,6 @@ export const validateImageDimension = (file) => {
 };
 
 /**
- * Get image dimensions without loading full image
  * @param {File} file 
  * @returns {Promise<{width: number, height: number}>}
  */
@@ -101,7 +90,6 @@ export const getImageDimensions = (file) => {
 };
 
 /**
- * Format file size untuk display
  * @param {number} bytes 
  * @returns {string}
  */

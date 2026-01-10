@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { getCurrentUser } from '../utils/getCurrentUser.js';
+import { getCurrentUser } from '../utils/auth/getCurrentUser.js';
 import { listNotesAPI } from '../lib/api.js';
 
 

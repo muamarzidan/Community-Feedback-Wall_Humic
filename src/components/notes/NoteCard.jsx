@@ -2,22 +2,13 @@ import { useCallback, useMemo } from 'react';
 import useImage from 'use-image';
 import { Group, Rect, Text, Image } from 'react-konva';
 
+import { isTokenAuthenticated } from '../../utils/auth/getAuthenticatedToken.js';
+import { replaceUserTypeNames } from '../../utils/notes/noteUserReplaceNameType.js';
+import { getUserTypeDisplay } from '../../utils/notes/noteUserNameType.js';
 import { formatReactionCount } from '../../utils/formatReactionCounts.js';
 import { formatDate } from '../../utils/formatDate.js';
+import { svgEdit, svgDelete } from './svgNoteIcon.jsx';
 
-
-
-const svgEdit = `
-<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
-  <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/>
-  <path d="m15 5 4 4" />
-</svg>
-`;
-
-const svgDelete = `
-<svg stroke="#ffffff" fill="#ffffff" stroke-width="0" viewBox="0 0 16 16" height="200px" width="200px" xmlns="http://www.w3.org/2000/svg"><path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5" />
-</svg>
-`;
 
 const SvgIcon = ({ svg, x, y, size = 12, onClick, onMouseEnter, onMouseLeave }) => {
   const [icon] = useImage(
@@ -43,10 +34,6 @@ const SvgIcon = ({ svg, x, y, size = 12, onClick, onMouseEnter, onMouseLeave }) 
 
 const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, onImageClick, cursorMode = 'drag' }) => {
   const [image] = useImage(note.image);
-
-  const isAuthenticated = () => {
-    return !!localStorage.getItem('token_community-feedback');
-  };
 
   const handleImageMouseEnter = (e) => {
     const stage = e.target.getStage();
@@ -191,7 +178,7 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, on
     e.cancelBubble = true;
     const stage = e.target.getStage();
     if (cursorMode === 'default' || stage.container().style.cursor === 'pointer') {
-      if (!isAuthenticated()) {
+      if (!isTokenAuthenticated()) {
         if (onGuestWarning) {
           onGuestWarning('Please login to react to notes');
         };
@@ -223,24 +210,6 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, on
       onImageClick(note.image);
     };
   }, [note.image, onImageClick]);
-  const getUserTypeDisplay = () => {
-    switch (note.userType) {
-      case 'you':
-        return '(You)';
-      case 'guest':
-        return '';
-      case 'people':
-        return '';
-      default:
-        return '';
-    };
-  };
-  const replaceUserTypeNames = (note) => {
-    if (note.userType === 'guest') {
-      return "Guest";
-    };
-    return note.author;
-  };
 
   // Calculate Y positions
   let currentY = padding;
@@ -272,13 +241,13 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, on
         <Text
           x={padding}
           y={currentY}
-          text={`${replaceUserTypeNames(note)} ${getUserTypeDisplay()}`}
+          text={`${replaceUserTypeNames(note)} ${getUserTypeDisplay(note)}`}
           fontSize={16}
           fill="#757575"
           width={isOwner ? 200 : 200}
           ellipsis={true}
         />
-        {/* Date for other people's notes */}
+        {/* Date (Other people's notes) */}
         {!isOwner && (
           <Text
             x={cardWidth - 85}
@@ -289,7 +258,7 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, on
             align="right"
           />
         )}
-        {/* Edit & Delete buttons for owner */}
+        {/* Edit & Delete buttons (Logged-in owner) */}
         {isOwner && (
           <Group>
             {/* Edit Button */}
@@ -444,7 +413,6 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, on
                 onTap={(e) => handleReactionClick(reaction.type, e)}
                 onMouseEnter={handleButtonMouseEnter}
                 onMouseLeave={handleButtonMouseLeave}
-                // listening={cursorMode === 'default'}
               />
               
               {/* Reaction Emoji */}
@@ -457,7 +425,6 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, on
                 onTap={(e) => handleReactionClick(reaction.type, e)}
                 onMouseEnter={handleButtonMouseEnter}
                 onMouseLeave={handleButtonMouseLeave}
-                // listening={cursorMode === 'default'}
               />
               
               {/* Reaction Count */}
@@ -472,13 +439,12 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, on
                 onTap={(e) => handleReactionClick(reaction.type, e)}
                 onMouseEnter={handleButtonMouseEnter}
                 onMouseLeave={handleButtonMouseLeave}
-                // listening={cursorMode === 'default'}
               />
             </Group>
           );
         })}
       </Group>
-      {/* Date for owner (below reactions) */}
+      {/* Date (logged-in owner) */}
       {isOwner && (
         <Text
           x={cardWidth - 86}

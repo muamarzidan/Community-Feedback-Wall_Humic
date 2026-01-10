@@ -18,7 +18,7 @@ export const AuthProvider = ({ children }) => {
         if (token && savedUser) {
             try {
                 setUser(JSON.parse(savedUser));
-                authAPI.getCurrentUser()
+                authAPI.getMeCurrentUser()
                     .then(response => {
                         setUser(response.data.user);
                         localStorage.setItem('user-data_community-feedback', JSON.stringify(response.data.user));

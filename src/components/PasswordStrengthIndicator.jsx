@@ -44,7 +44,6 @@ const PasswordStrengthIndicator = ({ password }) => {
         )}
       </div>
 
-      {/* Validation Checklist */}
       <div className="grid grid-cols-2 gap-1 text-xs">
         <ValidationItem
           isValid={validations.length}

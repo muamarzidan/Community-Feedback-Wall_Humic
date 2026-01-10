@@ -27,7 +27,6 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      // Token expired or invalid
       localStorage.removeItem('token_community-feedback');
       localStorage.removeItem('user-data_community-feedback');
       
@@ -44,7 +43,7 @@ export const authAPI = {
   login: (credentials) => api.post('/api/login', credentials),
   register: (userData) => api.post('/api/register', userData),
   logout: () => api.post('/api/logout'),
-  getCurrentUser: () => api.get('/api/me'),
+  getMeCurrentUser: () => api.get('/api/me'),
 };
 export const userAPI = {
   getUser: () => api.get('/api/user'),
@@ -66,7 +65,8 @@ export const userAPI = {
   },
 };
 export const canvasNotesAPI = {
-  getCurrentCanvasNotes: () => api.get('/api/canvas/current/notes'),
+  // getCurrentCanvasNotes: () => api.get('/api/canvas/current/notes'),
+  getCurrentCanvasNotes: () => api.get('/api/notes/spiral'),
   getCanvasById: (canvasId) => api.get(`/api/canvas/${canvasId}`),
   getCanvasNotesByID: (canvasId) => api.get(`/api/canvas/${canvasId}/notes`),
   createNote: (noteData) => {
@@ -74,12 +74,21 @@ export const canvasNotesAPI = {
     formData.append('title', noteData.title);
     formData.append('description', noteData.description);
     formData.append('color', noteData.color);
+    formData.append('height', noteData.height || 0);
     if (noteData.email) {
       formData.append('email', noteData.email);
     };
     if (noteData.image instanceof File) {
       formData.append('image', noteData.image);
     };
+    
+    console.log('API CALL - CREATE NOTE:', {
+      title: noteData.title,
+      height: noteData.height,
+      color: noteData.color,
+      hasImage: noteData.image instanceof File,
+      timestamp: new Date().toISOString()
+    });
 
     return api.post('/api/notes', formData, {
       headers: {
@@ -92,6 +101,7 @@ export const canvasNotesAPI = {
     formData.append('title', noteData.title);
     formData.append('description', noteData.description);
     formData.append('color', noteData.color);
+    formData.append('height', noteData.height || 0);
     
     if (noteData.image instanceof File) {
       formData.append('image', noteData.image);
@@ -99,6 +109,16 @@ export const canvasNotesAPI = {
     if (noteData.delete_image) {
       formData.append('delete_image', noteData.delete_image);
     }
+    
+    console.log('API CALL - UPDATE NOTE:', {
+      noteId: noteId,
+      title: noteData.title,
+      height: noteData.height,
+      color: noteData.color,
+      hasNewImage: noteData.image instanceof File,
+      deleteImage: noteData.delete_image,
+      timestamp: new Date().toISOString()
+    });
     
     return api.put(`/api/notes/${noteId}`, formData, {
       headers: {

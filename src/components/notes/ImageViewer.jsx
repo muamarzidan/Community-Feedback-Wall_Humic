@@ -9,7 +9,6 @@ const ImageViewer = ({ isOpen, imageUrl, onClose }) => {
                 onClose();
             };
         };
-        
         if (isOpen) {
             window.addEventListener('keydown', handleEsc);
             document.body.style.overflow = 'hidden';
@@ -54,10 +53,6 @@ const ImageViewer = ({ isOpen, imageUrl, onClose }) => {
                     <span className="font-medium">Close</span>
                 </button>
             </div>
-            {/* Hint */}
-            {/* <div className="absolute text-sm text-white/60 top-4 right-4">
-                Press ESC or click outside to close
-            </div> */}
         </div>
     );
 };

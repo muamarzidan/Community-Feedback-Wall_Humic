@@ -14,24 +14,24 @@ export const useCursorMode = () => {
 
 export const CursorModeProvider = ({ children }) => {
   const getInitialMode = () => {
-    const savedMode = localStorage.getItem('cursorMode');
+    const savedMode = localStorage.getItem('cursor-mode_community-feedback');
     return savedMode || 'drag';
   };
 
   const [cursorMode, setCursorModeState] = useState(getInitialMode);
   const location = useLocation();
 
-  // Custom setCursorMode that also saves to localStorage
+
   const setCursorMode = useCallback((mode) => {
     setCursorModeState(mode);
-    localStorage.setItem('cursorMode', mode);
+    localStorage.setItem('cursor-mode_community-feedback', mode);
   }, []);
 
   // Reset cursor mode based on page navigation
   useEffect(() => {
     if (location.pathname === '/') {
       // Home page - use saved mode or default to drag
-      const savedMode = localStorage.getItem('cursorMode');
+      const savedMode = localStorage.getItem('cursor-mode_community-feedback');
       setCursorModeState(savedMode || 'drag');
       // Remove body cursor style when on canvas
       document.body.style.cursor = '';
@@ -42,13 +42,12 @@ export const CursorModeProvider = ({ children }) => {
       document.body.style.cursor = 'default';
     };
     
-    // Cleanup
     return () => {
       document.body.style.cursor = '';
     };
   }, [location.pathname]);
 
-  // Memoize context value to prevent unnecessary re-renders
+  // Memoize context value to prevent unnecessary re render
   const contextValue = useMemo(() => ({
     cursorMode,
     setCursorMode

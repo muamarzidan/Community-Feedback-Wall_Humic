@@ -19,7 +19,7 @@ export default function UpdatePasswordModal({ isOpen, onClose }) {
         password_confirmation: ''
     });
 
-    
+
     if (!isOpen) return null;
 
     const handleChange = (e) => {

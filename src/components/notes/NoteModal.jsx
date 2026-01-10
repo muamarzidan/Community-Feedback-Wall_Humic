@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
+
 import { validateImageDimension } from '@/utils/imageValidator';
 
 
@@ -26,6 +27,89 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
   
   const isAuthenticated = () => {
     return !!localStorage.getItem('token_community-feedback');
+  };
+  
+  const measureTextHeight = (text, fontStyle, maxWidth, lineHeight) => {
+    if (!text) return 0;
+    
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    context.font = fontStyle;
+    
+    const words = text.split(' ');
+    let lines = [];
+    let currentLine = '';
+    
+    words.forEach(word => {
+      const testLine = currentLine ? `${currentLine} ${word}` : word;
+      const metrics = context.measureText(testLine);
+      
+      if (metrics.width > maxWidth && currentLine) {
+        lines.push(currentLine);
+        currentLine = word;
+      } else {
+        currentLine = testLine;
+      }
+    });
+    
+    if (currentLine) {
+      lines.push(currentLine);
+    }
+    
+    return lines.length * lineHeight;
+  };
+  const calculateNoteHeight = () => {
+    const cardWidth = 355;
+    const padding = 16;
+    const contentWidth = cardWidth - (padding * 2); // 323px
+    
+    // Ukur tinggi title
+    const titleHeight = measureTextHeight(
+      formData.title,
+      18,
+      'bold 18px Arial',
+      contentWidth,
+      24
+    );
+    
+    // Ukur tinggi description
+    const descHeight = measureTextHeight(
+      formData.description,
+      15,
+      '15px Arial',
+      contentWidth,
+      20
+    );
+    
+    // Hitung tinggi image jika ada
+    let imageHeight = 0;
+    if (formData.image || formData.imagePreview) {
+      // Estimasi tinggi image (akan disesuaikan dengan aspect ratio actual)
+      // Untuk preview, kita estimasi max height 200px
+      imageHeight = 200;
+    }
+    
+    // Total height calculation
+    const headerHeight = 5;
+    const headerGap = isAuthenticated() ? 36 : 24;
+    let totalHeight = padding; // Top padding
+    
+    totalHeight += headerHeight + headerGap; // Header section
+    totalHeight += titleHeight + 8; // Title + gap
+    
+    if (imageHeight > 0) {
+      totalHeight += imageHeight + 12; // Image + gap
+    }
+    
+    if (descHeight > 0) {
+      totalHeight += descHeight + 12; // Description + gap
+    }
+    
+    totalHeight += 26 + 20; // Reactions section + gap
+    totalHeight += 16; // Date section
+    totalHeight += padding; // Bottom padding
+    
+    return Math.ceil(totalHeight);
   };
   
   useEffect(() => {
@@ -60,11 +144,23 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
       return;
     };
     
+    // Hitung height sebelum submit
+    const calculatedHeight = calculateNoteHeight();
+    
+    console.log('CALCULATED NOTE HEIGHT:', {
+      title: formData.title,
+      description: formData.description,
+      hasImage: !!formData.image || !!formData.imagePreview,
+      calculatedHeight: calculatedHeight,
+      timestamp: new Date().toISOString()
+    });
+    
     const noteData = {
       ...formData,
       id: note?.id || Date.now(),
       createdAt: note?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      height: calculatedHeight, // Tambahkan height
     };
 
     // Remove imagePreview from data sent to API
@@ -223,11 +319,6 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
           </div>
           {isAuthenticated() && (
             <div>
-              <label className="block mb-2 text-sm font-medium text-gray-700">
-                Image (Optional - Max 3000x3000px)
-              </label>
-              
-              {/* Error/Info Message */}
               {imageError && (
                 <div className={`mb-2 p-2 text-sm rounded-lg ${
                   imageError.startsWith('✓') 
@@ -237,7 +328,6 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
                   {imageError}
                 </div>
               )}
-              
               {formData.imagePreview ? (
                 <div className="relative">
                   <img

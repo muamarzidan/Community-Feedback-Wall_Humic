@@ -4,11 +4,11 @@ import { format } from 'date-fns';
 
 
 import { userAPI, listNotesAPI, canvasNotesAPI } from '../lib/api';
-import { getCurrentUser } from '../utils/getCurrentUser';
+import { getCurrentUser } from '../utils/auth/getCurrentUser';
 import ImageViewer from '../components/notes/ImageViewer';
 import GuestWarningModal from '../components/auth/GuestWarningModal';
 import NoteModal from '../components/notes/NoteModal';
-import DeleteConfirmModal from '../components/notes/DeleteConfirmModal';
+import DeleteConfirmModal from '../components/notes/DeleteConfirmModalNote';
 import Layout from '../components/common/Layout';
 import Toast from '../components/common/Toast';
 
