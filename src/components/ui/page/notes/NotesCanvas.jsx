@@ -1,9 +1,9 @@
 import { useRef, useEffect, useState } from 'react';
 import { Stage, Layer } from 'react-konva';
 
-import { closeAllMenus } from '../../utils/domUtils';
-import NoteCard from './NoteCard';
-import BackgroundCanvas from "../../assets/images/backgorund-canvas.png";
+import { closeAllMenus } from '@/utils/domUtils';
+import NoteCard from '@/components/ui/page/notes/NoteCard';
+import BackgroundCanvas from '@/assets/images/backgorund-canvas.png';
 
 
 const NotesCanvas = ({ 

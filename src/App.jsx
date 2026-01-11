@@ -1,19 +1,19 @@
 import { useState, useEffect } from 'react';
 
-import { useCursorMode } from './contexts/CursorModeContext';
-import { useCanvasNotes } from './hooks/useCanvasNotes';
-import { closeAllMenus } from './utils/domUtils';
-import Layout from './components/common/Layout';
-import NotesCanvas from './components/notes/NotesCanvas';
-import CreateNoteButton from './components/notes/CreateNoteButton';
-import CursorModeToggle from './components/notes/CursorModeToggle';
-import ZoomControls from './components/notes/ZoomControl';
-import Pagination from './components/Pagination';
-import NoteModal from './components/notes/NoteModal';
-import GuestWarningModal from './components/auth/GuestWarningModal';
-import ImageViewer from './components/notes/ImageViewer';
-import Toast from './components/common/Toast';
-import DeleteConfirmModal from './components/notes/DeleteConfirmModalNote';
+import { useCursorMode } from '@/contexts/CursorModeContext';
+import { useCanvasNotes } from '@/hooks/useCanvasNotes';
+import { closeAllMenus } from '@/utils/domUtils';
+import Layout from '@/components/ui/common/Layout';
+import NotesCanvas from '@/components/ui/page/notes/NotesCanvas';
+import CreateNoteButton from '@/components/ui/page/notes/CreateNoteButton';
+import CursorModeToggle from '@/components/ui/page/notes/CursorModeToggle';
+import ZoomControls from '@/components/ui/page/notes/ZoomControl';
+import Pagination from '@/components/ui/page/notes/Pagination';
+import NoteModal from '@/components/ui/page/notes/NoteModal';
+import GuestWarningModal from '@/components/ui/page/auth/GuestWarningModal';
+import ImageViewer from '@/components/ui/page/notes/ImageViewer';
+import Toast from '@/components/ui/common/Toast';
+import DeleteConfirmModal from '@/components/ui/page/notes/DeleteConfirmModalNote';
 import './App.css';
 
 

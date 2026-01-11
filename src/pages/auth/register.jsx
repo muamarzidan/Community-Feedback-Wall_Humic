@@ -6,7 +6,7 @@ import { HiOutlineEyeOff, HiOutlineEye } from "react-icons/hi";
 
 import { useAuth } from '@/contexts/AuthContext';
 import { checkRateLimit, recordAttempt, formatRemainingTime } from '@/utils/rateLimiter';
-import PasswordStrengthIndicator from '@/components/PasswordStrengthIndicator';
+import PasswordStrengthIndicator from '@/components/ui/page/auth/PasswordStrengthIndicator';
 import RegisterBanner from '@/assets/images/register-banner-agora.webp';
 import logoAgora from '@/assets/icons/logo_agora_communityfeedback.png';
 
@@ -36,8 +36,7 @@ export default function SignUpPage() {
             document.body.style.cursor = '';
         };
     }, []);
-
-    // Check rate limit on mount dan setiap detik jika blocked
+    // Check rate limit on mount
     useEffect(() => {
         const checkLimit = () => {
             const limit = checkRateLimit();
@@ -46,7 +45,6 @@ export default function SignUpPage() {
 
         checkLimit();
 
-        // Update countdown setiap detik jika blocked
         let interval;
         if (rateLimit.isBlocked && rateLimit.remainingTime > 0) {
             interval = setInterval(checkLimit, 1000);
@@ -69,14 +67,12 @@ export default function SignUpPage() {
         e.preventDefault();
         setError('');
 
-        // Check rate limit before submit
         const limit = checkRateLimit();
         if (limit.isBlocked) {
             setError(`Too many registration attempts. Please wait ${formatRemainingTime(limit.remainingTime)} before trying again.`);
             setRateLimit(limit);
             return;
         }
-
         if (formData.password !== formData.password_confirmation) {
             setError('Password dan konfirmasi password tidak cocok');
             return;
@@ -85,7 +81,6 @@ export default function SignUpPage() {
         setLoading(true);
 
         try {
-            // Record attempt
             recordAttempt();
 
             const result = await register(formData);
@@ -94,7 +89,6 @@ export default function SignUpPage() {
             } else {
                 setError(result.message);
                 
-                // Check if rate limited after this attempt
                 const newLimit = checkRateLimit();
                 setRateLimit(newLimit);
             };
@@ -118,6 +112,7 @@ export default function SignUpPage() {
                 </div>
                 {/* Right side */}
                 <div className="w-full p-6 sm:p-10 lg:w-1/2">
+                    {/* Logo */}
                     <div className="flex lg:justify-end">
                         <Link to="/" className="text-3xl font-bold transition-colors hover:text-gray-700">
                             <img
@@ -127,18 +122,16 @@ export default function SignUpPage() {
                             />
                         </Link>
                     </div>
-
                     <h2 className="mt-8 text-2xl font-semibold">Sign up</h2>
                     <p className="mb-6 text-sm text-gray-500">
                         Let's get you all set up so you can access your personal account.
                     </p>
-
                     {error && (
                         <div className="p-3 mb-4 text-sm text-red-600 bg-red-100 border border-red-200 rounded-lg">
                             {error}
                         </div>
                     )}
-
+                    {/* Main Content */}
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
                             <input

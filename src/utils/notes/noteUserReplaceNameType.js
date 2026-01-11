@@ -1,4 +1,4 @@
-import { truncateText } from '../truncateText.js';
+import { truncateText } from '@/utils/truncateText.js';
 
 export const replaceUserTypeNames = (note) => {
     if (note.userType === 'guest') {

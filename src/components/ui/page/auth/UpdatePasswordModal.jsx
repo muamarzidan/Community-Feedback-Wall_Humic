@@ -3,7 +3,7 @@ import { X } from 'lucide-react';
 import { HiOutlineEyeOff, HiOutlineEye } from "react-icons/hi";
 
 import { userAPI } from '@/lib/api';
-import PasswordStrengthIndicator from './PasswordStrengthIndicator';
+import PasswordStrengthIndicator from '@/components/ui/page/auth/PasswordStrengthIndicator';
 
 
 export default function UpdatePasswordModal({ isOpen, onClose }) {

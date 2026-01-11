@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Mail, UserPlus } from 'lucide-react';
 
-import Layout from '@/components/common/Layout';
+import Layout from '@/components/ui/common/Layout';
 import DifaProfile from '@/assets/images/profile-difa-agora.jpeg';
 import RheaProfile from '@/assets/images/profile-rhea-agora.jpeg';
 import AmarProfile from '@/assets/images/profile-amar-agora.jpg';

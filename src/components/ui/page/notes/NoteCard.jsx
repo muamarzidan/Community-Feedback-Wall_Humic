@@ -7,7 +7,7 @@ import { replaceUserTypeNames } from '@/utils/notes/noteUserReplaceNameType.js';
 import { getUserTypeDisplay } from '@/utils/notes/noteUserNameType.js';
 import { formatReactionCount } from '@/utils/notes/formatReactionCounts.js';
 import { formatDate } from '@/utils/formatDate.js';
-import { svgEdit, svgDelete } from '@/components/ui/page/svgNoteIcon.jsx';
+import { svgEdit, svgDelete } from '@/components/ui/page/notes/svgNoteIcon.jsx';
 
 
 const SvgIcon = ({ svg, x, y, size = 12, onClick, onMouseEnter, onMouseLeave }) => {

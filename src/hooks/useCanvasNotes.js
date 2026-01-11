@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 
-import { getCurrentUser } from '../utils/auth/getCurrentUser.js';
-import { canvasNotesAPI } from '../lib/api.js';
+import { getCurrentUser } from '@/utils/auth/getCurrentUser.js';
+import { canvasNotesAPI } from '@/lib/api.js';
 
 
 const GUEST_STORAGE_KEY = 'guest-note-timestamp_community-feedback';

@@ -1,28 +1,45 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Search, ArrowUp, Pencil, Trash2 } from 'lucide-react';
+import { Search, Heart, Calendar, ArrowUp } from 'lucide-react';
+import { DateRangePicker } from 'react-date-range';
 import { format } from 'date-fns';
+import 'react-date-range/dist/styles.css';
+import 'react-date-range/dist/theme/default.css';
+
+import { listNotesAPI } from '@/lib/api';
+import { getCurrentUser } from '@/utils/auth/getCurrentUser';
+import { formatDateRange } from '@/utils/formatDate';
+import GuestWarningModal from '@/components/ui/page/auth/GuestWarningModal';
+import ImageViewer from '@/components/ui/page/notes/ImageViewer';
+import Layout from '@/components/ui/common/Layout';
 
 
-import { userAPI, listNotesAPI, canvasNotesAPI } from '../../lib/api';
-import { getCurrentUser } from '../../utils/auth/getCurrentUser';
-import ImageViewer from '../../components/notes/ImageViewer';
-import GuestWarningModal from '../../components/auth/GuestWarningModal';
-import NoteModal from '../../components/notes/NoteModal';
-import DeleteConfirmModal from '../../components/notes/DeleteConfirmModalNote';
-import Layout from '../../components/common/Layout';
-import Toast from '../../components/common/Toast';
-
-
-export default function MyNotesPage() {
+export default function NotesListPage() {
     const [allNotes, setAllNotes] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
-    const [activeFilter, setActiveFilter] = useState('my-notes');
+    const [currentFilter, setCurrentFilter] = useState('today');
+    const [topLikeActive, setTopLikeActive] = useState(false);
+    const [showDatePicker, setShowDatePicker] = useState(false);
     const [showScrollTop, setShowScrollTop] = useState(false);
-
+    const [dateRange, setDateRange] = useState([
+        {
+            startDate: new Date(),
+            endDate: new Date(),
+            key: 'selection'
+        }
+    ]);
+    const [tempDateRange, setTempDateRange] = useState([
+        {
+            startDate: new Date(),
+            endDate: new Date(),
+            key: 'selection'
+        }
+    ]);
+    const [hasDateChanged, setHasDateChanged] = useState(false);
+    const datePickerRef = useRef(null);
     const scrollContainerRef = useRef(null);
     const [imageViewer, setImageViewer] = useState({
         isOpen: false,
@@ -31,20 +48,6 @@ export default function MyNotesPage() {
     const [guestWarningModal, setGuestWarningModal] = useState({
         isOpen: false,
         message: ''
-    });
-    const [modalState, setModalState] = useState({
-        isOpen: false,
-        editingNote: null
-    });
-    const [deleteConfirm, setDeleteConfirm] = useState({
-        isOpen: false,
-        noteId: null,
-        noteTitle: ''
-    });
-    const [toast, setToast] = useState({
-        isOpen: false,
-        message: '',
-        type: 'success'
     });
 
 
@@ -59,27 +62,26 @@ export default function MyNotesPage() {
         setCurrentPage(1);
         setHasMore(true);
         loadNotes(1, true);
-    }, [activeFilter]);
+    }, [currentFilter, dateRange, topLikeActive]);
 
     const loadNotes = async (page = 1, reset = false) => {
         if (!reset) {
             setLoadingMore(true);
-        };
+        }
 
         try {
             const params = {
                 page: page,
                 per_page: itemsPerPage,
+                from_date: format(dateRange[0].startDate, 'yyyy-MM-dd'),
+                to_date: format(dateRange[0].endDate, 'yyyy-MM-dd')
             };
 
-            let response;
-            if (activeFilter === 'my-notes') {
-                params.sort = 'newest';
-                response = await userAPI.getMyNotes(params);
-            } else {
-                params.reaction_type = activeFilter;
-                response = await userAPI.getMyReactions(params);
-            };
+            if (topLikeActive) {
+                params.filter = 'top_like';
+            }
+
+            const response = await listNotesAPI.getFilteredNotes(params);
 
             if (response.data && response.data.data) {
                 const data = response.data.data;
@@ -93,15 +95,14 @@ export default function MyNotesPage() {
                 });
 
                 setHasMore(data.pagination.current_page < data.pagination.last_page);
-            };
+            }
         } catch (error) {
             console.error('Error loading notes:', error);
         } finally {
             setLoading(false);
             setLoadingMore(false);
-        };
+        }
     };
-
     const transformNoteFromAPI = (apiNote) => {
         const currentUser = getCurrentUser();
 
@@ -113,8 +114,8 @@ export default function MyNotesPage() {
                 userType = 'you';
             } else {
                 userType = 'people';
-            };
-        };
+            }
+        }
 
         return {
             id: apiNote.id,
@@ -133,13 +134,11 @@ export default function MyNotesPage() {
                 fire: apiNote.reactions?.fire || 0,
             },
             userReactions: apiNote.user_reactions || [],
-            myReactions: apiNote.my_reactions || [],
-            latestReactionAt: apiNote.latest_reaction_at || null,
             createdAt: apiNote.created_at,
             updatedAt: apiNote.updated_at,
         };
     };
-
+    
     const loadMore = useCallback(() => {
         if (!loadingMore && hasMore) {
             const nextPage = currentPage + 1;
@@ -154,7 +153,6 @@ export default function MyNotesPage() {
 
         const handleScroll = () => {
             const { scrollTop, scrollHeight, clientHeight } = container;
-
             setShowScrollTop(scrollTop > 500);
 
             if (scrollHeight - scrollTop - clientHeight < 300 && !loadingMore && hasMore) {
@@ -169,6 +167,33 @@ export default function MyNotesPage() {
     const scrollToTop = () => {
         scrollContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
     };
+    const handleApplyDateFilter = () => {
+        setDateRange(tempDateRange);
+        setHasDateChanged(false);
+        setShowDatePicker(false);
+    };
+    const handleOpenDatePicker = () => {
+        setTempDateRange(dateRange); 
+        setHasDateChanged(false);
+        setShowDatePicker(!showDatePicker);
+    };
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (datePickerRef.current && !datePickerRef.current.contains(event.target)) {
+                setShowDatePicker(false);
+            };
+        };
+
+        if (showDatePicker) {
+            document.addEventListener('mousedown', handleClickOutside);
+        };
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showDatePicker]);
+
     const filteredNotes = allNotes.filter(note => {
         const matchesSearch = note.title?.toLowerCase().includes(searchQuery.toLowerCase());
         return matchesSearch;
@@ -179,6 +204,7 @@ export default function MyNotesPage() {
             const columnIndex = index % 3;
             columns[columnIndex].push(note);
         });
+
         return columns;
     };
 
@@ -201,7 +227,9 @@ export default function MyNotesPage() {
 
         try {
             const response = await listNotesAPI.toggleReaction(noteId, reactionType);
+
             if (response.data && response.data.data) {
+                // Update local state
                 setAllNotes(prevNotes => prevNotes.map(note => {
                     if (note.id === noteId) {
                         return {
@@ -218,7 +246,7 @@ export default function MyNotesPage() {
                     }
                     return note;
                 }));
-            };
+            }
         } catch (error) {
             console.error('Error toggling reaction:', error);
         };
@@ -231,172 +259,91 @@ export default function MyNotesPage() {
         };
     };
 
-    const handleEditNote = (note) => {
-        setModalState({
-            isOpen: true,
-            editingNote: note
-        });
-    };
-
-    const handleDeleteNote = (note) => {
-        setDeleteConfirm({
-            isOpen: true,
-            noteId: note.id,
-            noteTitle: note.title
-        });
-    };
-
-    const confirmDelete = async () => {
-        try {
-            await canvasNotesAPI.deleteNote(deleteConfirm.noteId);
-            
-            // Remove from local state
-            setAllNotes(prev => prev.filter(n => n.id !== deleteConfirm.noteId));
-            
-            setToast({
-                isOpen: true,
-                message: 'Note deleted successfully!',
-                type: 'success'
-            });
-            
-            setDeleteConfirm({
-                isOpen: false,
-                noteId: null,
-                noteTitle: ''
-            });
-        } catch (error) {
-            console.error('Error deleting note:', error);
-            setToast({
-                isOpen: true,
-                message: 'Failed to delete note',
-                type: 'error'
-            });
-        }
-    };
-
-    const handleSaveNote = async (noteData) => {
-        try {
-            if (modalState.editingNote) {
-                // Transform backgroundColor to color format for API
-                const apiPayload = {
-                    title: noteData.title,
-                    description: noteData.description,
-                    color: noteData.backgroundColor?.replace('#', '') || 'fbbf24',
-                    image: noteData.image,
-                    delete_image: noteData.delete_image || false
-                };
-                
-                await canvasNotesAPI.updateNote(modalState.editingNote.id, apiPayload);
-                
-                // Update local state
-                setAllNotes(prev => prev.map(note => {
-                    if (note.id === modalState.editingNote.id) {
-                        return {
-                            ...note,
-                            title: noteData.title,
-                            description: noteData.description,
-                            backgroundColor: noteData.backgroundColor,
-                            image: noteData.image instanceof File ? null : note.image, // Will be updated after API response
-                        };
-                    }
-                    return note;
-                }));
-
-                window.location.reload();
-                
-                setToast({
-                    isOpen: true,
-                    message: 'Note updated successfully!',
-                    type: 'success'
-                });
-            }
-            
-            setModalState({
-                isOpen: false,
-                editingNote: null
-            });
-        } catch (error) {
-            console.error('Error saving note:', error);
-            setToast({
-                isOpen: true,
-                message: error.message || 'Failed to save note',
-                type: 'error'
-            });
-        }
-    };
-
-    const handleCloseModal = () => {
-        setModalState({
-            isOpen: false,
-            editingNote: null
-        });
-    };
-
-    const reactionButtons = [
-        { type: 'heart', emoji: '❤️', label: 'Heart' },
-        { type: 'like', emoji: '👍', label: 'Like' },
-        { type: 'laugh', emoji: '😂', label: 'Laugh' },
-        { type: 'surprised', emoji: '😮', label: 'Surprised' },
-        { type: 'fire', emoji: '🔥', label: 'Fire' },
-    ];
-
     return (
         <Layout>
-            {loading ? (
-                <div className="flex items-center justify-center w-full h-screen bg-gray-50">
-                    <div className="text-center">
-                        <div className="inline-block w-12 h-12 border-4 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
-                        <p className="mt-4 text-gray-600">Loading notes...</p>
-                    </div>
-                </div>
-            ) : (
-                <div className="flex flex-col h-full overflow-hidden bg-gray-50">
-                    {/* Header */}
-                    <div className="px-6 py-4 space-y-4 bg-white">
-                        {/* Title */}
-                        <h1 className="font-bold text-center text-gray-900 sm:text-2xl sm:text-left">My Notes</h1>
-                        <div className="flex flex-col justify-between w-full gap-2 lg:flex-row">
-                            {/* Search */}
-                            <div className="relative w-full sm:flex-1/6 2xl:flex-3/6">
-                                <Search className="absolute w-4 h-4 text-gray-400 transform -translate-y-1/2 sm:w-5 sm:h-5 left-3 top-1/2" />
-                                <input
-                                    type="text"
-                                    placeholder="Search my notes..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full py-2 pl-10 pr-4 text-xs border border-gray-300 rounded-lg sm:rounded-xl sm:text-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                />
-                            </div>
-                            {/* Filter Buttons */}
-                            <div className="flex flex-wrap items-center justify-center gap-2 lg:justify-end sm:flex-3/6">
-                                {/* My Notes Button */}
-                                <button
-                                    onClick={() => setActiveFilter('my-notes')}
-                                    className={`px-4 py-2 text-xs sm:text-sm font-medium rounded-lg transition-colors cursor-pointer ${activeFilter === 'my-notes'
+            <div className="flex flex-col h-full overflow-hidden bg-gray-50">
+                {/* Header */}
+                <div className="px-6 py-4 space-y-4 bg-white">
+                    {/* Notes Title Mobile */}
+                    <h1 className="block text-2xl font-bold text-center text-gray-900 sm:hidden">Notes</h1>
+                    <div className="flex flex-col items-center justify-between gap-4 lg:flex-row">
+                        {/* Search */}
+                        <div className="relative w-full lg:max-w-[320px] xl:max-w-[768px] 2xl:max-w-[600px]">
+                            <Search className="absolute w-5 h-5 text-gray-400 transform -translate-y-1/2 left-3 top-1/2" />
+                            <input
+                                type="text"
+                                placeholder="Search feedback..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full py-3 pl-10 pr-4 text-xs border border-gray-300 rounded-xl sm:text-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                        {/* Top Like & Date Picker */}
+                        <div className="flex items-center justify-between w-full gap-1 sm:gap-6 sm:w-fit">
+                            {/* Top Like */}
+                            <button
+                                onClick={() => setTopLikeActive(!topLikeActive)}
+                                className={`cursor-pointer flex items-center gap-2 px-3 py-2 rounded-lg text-xs sm:text-base font-medium transition-colors ${topLikeActive
                                         ? 'bg-blue-500 text-white'
                                         : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                                        }`}
+                                    }`}
+                            >
+                                <Heart className={`w-4 h-4 sm:w-5 sm:h-5 ${topLikeActive ? 'fill-white' : ''}`} />
+                                <span>Top Like</span>
+                            </button>
+                            {/* Date Range Picker */}
+                            <div className="relative" ref={datePickerRef}>
+                                <button
+                                    onClick={handleOpenDatePicker}
+                                    className="cursor-pointer flex items-center gap-2 px-3 py-2 text-[10px] text-gray-700 bg-white border border-gray-300 rounded-lg sm:text-lg hover:bg-gray-50"
                                 >
-                                    My Notes
+                                    <Calendar className="w-4 h-4" />
+                                    <span>{currentFilter === 'today' ? 'Today' : formatDateRange(dateRange)}</span>
                                 </button>
-                                {/* Reaction Filters */}
-                                {reactionButtons.map((reaction) => (
-                                    <button
-                                        key={reaction.type}
-                                        onClick={() => setActiveFilter(reaction.type)}
-                                        className={`px-4 py-2 text-xs sm:text-sm font-medium rounded-lg transition-colors cursor-pointer flex items-center gap-2 ${activeFilter === reaction.type
-                                            ? 'bg-blue-500 text-white'
-                                            : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                                            }`}
-                                    >
-                                        <span>{reaction.emoji}</span>
-                                        <span className="hidden sm:inline">{reaction.label}</span>
-                                    </button>
-                                ))}
+                                {showDatePicker && (
+                                    <div className="absolute right-0 z-50 mt-2 bg-white border border-gray-300 rounded-lg shadow-lg">
+                                        <DateRangePicker
+                                            onChange={item => {
+                                                setTempDateRange([item.selection]);
+                                                setHasDateChanged(true);
+                                                setCurrentFilter('custom');
+                                            }}
+                                            showSelectionPreview={true}
+                                            moveRangeOnFirstSelection={false}
+                                            months={1}
+                                            ranges={tempDateRange}
+                                            direction="horizontal"
+                                            inputRanges={[]}
+                                        />
+                                        <div className="flex justify-end gap-2 p-3 border-t border-gray-100">
+                                            <button
+                                                onClick={handleApplyDateFilter}
+                                                disabled={!hasDateChanged}
+                                                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${hasDateChanged
+                                                        ? 'bg-blue-500 text-white hover:bg-blue-600 cursor-pointer'
+                                                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                                    }`}
+                                            >
+                                                Apply
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
-                    {/* Notes */}
+                    {/* Notes Title Desktop */}
+                    <h2 className="hidden text-2xl font-bold text-gray-900 sm:block">Notes</h2>
+                </div>
+                {/* Main Content */}
+                {loading ? (
+                    <div className="flex items-center justify-center w-full h-screen bg-gray-50">
+                        <div className="text-center">
+                            <div className="inline-block w-12 h-12 border-4 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
+                            <p className="mt-4 text-gray-600">Loading notes...</p>
+                        </div>
+                    </div>
+                ) : (
                     <div ref={scrollContainerRef} className="relative flex-1 p-6 overflow-auto">
                         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
                             {noteColumns.map((column, columnIndex) => (
@@ -410,7 +357,7 @@ export default function MyNotesPage() {
                                             {/* Decoration */}
                                             <div className="absolute hidden w-24 h-24 bg-black rounded-full sm:inline opacity-10 -top-10 -right-10"></div>
                                             {/* Author */}
-                                            <div className="flex justify-start relative z-10 mb-3 text-[10px] sm:text-base text-[#757575]">
+                                            <div className="flex justify-between relative z-10 mb-3 text-[10px] sm:text-base text-[#757575]">
                                                 <div><span>{note?.author}</span><span className="ml-2 font-semibold">{isMyNotes(note)}</span></div>
                                                 <div className="inline-block font-medium sm:hidden">{format(new Date(note.createdAt), 'dd/MM/yyyy')}</div>
                                             </div>
@@ -484,27 +431,9 @@ export default function MyNotesPage() {
                                                     🔥 <span>{note.reactions?.fire || 0}</span>
                                                 </button>
                                             </div>
-                                            {/* Date and Actions */}
-                                            <div className="mt-2 text-[10px] sm:text-sm font-medium text-[#757575] flex justify-between items-center">
+                                            {/* Date */}
+                                            <div className="mt-2 text-[10px] sm:text-sm font-medium text-[#757575] sm:block hidden">
                                                 {format(new Date(note.createdAt), 'dd/MM/yyyy')}
-                                                {
-                                                    note.userType === 'you' && (
-                                                        <div className="flex gap-2 ">
-                                                            <div 
-                                                                onClick={() => handleEditNote(note)}
-                                                                className="flex items-center p-2 transition-colors bg-white rounded-full cursor-pointer hover:bg-gray-100"
-                                                            >
-                                                                <Pencil className="inline-block w-3 h-3 text-black sm:w-4 sm:h-4" />
-                                                            </div>
-                                                            <div 
-                                                                onClick={() => handleDeleteNote(note)}
-                                                                className="flex items-center p-2 transition-all bg-red-500 rounded-full cursor-pointer hover:bg-red-600"
-                                                            >
-                                                                <Trash2 className="inline-block w-3 h-3 text-white sm:w-4 sm:h-4" />
-                                                            </div>
-                                                        </div>
-                                                    )
-                                                }
                                             </div>
                                         </div>
                                     ))}
@@ -526,57 +455,30 @@ export default function MyNotesPage() {
                         {/* Empty state */}
                         {filteredNotes.length === 0 && !loading && (
                             <div className="py-12 text-center">
-                                <p className="text-gray-500">
-                                    {activeFilter === 'my-notes'
-                                        ? 'You haven\'t created any notes yet.'
-                                        : `You haven't reacted with ${activeFilter} yet.`}
-                                </p>
+                                <p className="text-gray-500">No notes found.</p>
                             </div>
                         )}
                         {/* Scroll to Top Button */}
                         {showScrollTop && (
                             <button
                                 onClick={scrollToTop}
-                                className="fixed flex items-center justify-center w-10 h-10 text-white transition-all bg-blue-500 rounded-full shadow-lg cursor-pointer sm:w-12 sm:h-12 z-11 bottom-8 right-8 hover:bg-blue-600 hover:scale-110"
+                                className="fixed flex items-center justify-center w-12 h-12 text-white transition-all bg-blue-500 rounded-full shadow-lg cursor-pointer z-11 bottom-8 right-8 hover:bg-blue-600 hover:scale-110"
                             >
-                                <ArrowUp className="w-5 h-5 sm:w-6 sm:h-6" />
+                                <ArrowUp className="w-6 h-6" />
                             </button>
                         )}
                     </div>
-                </div>
-            )}
-            {/* Image Viewer Modal */}
+                )}
+            </div>
             <ImageViewer
                 isOpen={imageViewer.isOpen}
                 imageUrl={imageViewer.imageUrl}
                 onClose={() => setImageViewer({ isOpen: false, imageUrl: '' })}
             />
-            {/* Guest Warning Modal */}
             <GuestWarningModal
                 isOpen={guestWarningModal.isOpen}
                 onClose={() => setGuestWarningModal({ isOpen: false, message: '' })}
                 message={guestWarningModal.message}
-            />
-            {/* Note Modal */}
-            <NoteModal
-                isOpen={modalState.isOpen}
-                onClose={handleCloseModal}
-                onSave={handleSaveNote}
-                note={modalState.editingNote}
-            />
-            {/* Delete Confirmation Modal */}
-            <DeleteConfirmModal
-                isOpen={deleteConfirm.isOpen}
-                onClose={() => setDeleteConfirm({ isOpen: false, noteId: null, noteTitle: '' })}
-                onConfirm={confirmDelete}
-                noteTitle={deleteConfirm.noteTitle}
-            />
-            {/* Toast Notification */}
-            <Toast
-                isOpen={toast.isOpen}
-                message={toast.message}
-                type={toast.type}
-                onClose={() => setToast({ isOpen: false, message: '', type: 'success' })}
             />
         </Layout>
     );

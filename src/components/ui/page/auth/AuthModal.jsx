@@ -6,7 +6,7 @@ import { checkRateLimit, recordAttempt, formatRemainingTime } from '@/utils/rate
 
 
 import { useAuth } from '@/contexts/AuthContext';
-import PasswordStrengthIndicator from '../PasswordStrengthIndicator';
+import PasswordStrengthIndicator from '@/components/ui/page/auth/PasswordStrengthIndicator';
 import LoginBanner from '@/assets/images/login-banner-agora.webp';
 import RegisterBanner from '@/assets/images/register-banner-agora.webp';
 
@@ -31,7 +31,8 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
         remainingTime: 0
     });
 
-    // Check rate limit on mount dan setiap detik jika blocked
+
+    // Check rate limit on mount
     useEffect(() => {
         if (!isOpen) return;
 
@@ -67,7 +68,6 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
         e.preventDefault();
         setError('');
 
-        // Check rate limit before submit
         const limit = checkRateLimit();
         if (limit.isBlocked) {
             setError(`Too many ${mode === 'login' ? 'login' : 'registration'} attempts. Please wait ${formatRemainingTime(limit.remainingTime)} before trying again.`);
@@ -78,7 +78,6 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
         setLoading(true);
 
         try {
-            // Record attempt
             recordAttempt();
 
             if (mode === 'login') {
@@ -94,7 +93,6 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                 } else {
                     setError(result.message);
                     
-                    // Check if rate limited after this attempt
                     const newLimit = checkRateLimit();
                     setRateLimit(newLimit);
                 };
@@ -117,7 +115,6 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                 } else {
                     setError(result.message);
                     
-                    // Check if rate limited after this attempt
                     const newLimit = checkRateLimit();
                     setRateLimit(newLimit);
                 };

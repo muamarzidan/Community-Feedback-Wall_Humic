@@ -1,15 +1,15 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
-import { CursorModeProvider } from './contexts/CursorModeContext.jsx';
-import { AuthProvider, useAuth } from './contexts/AuthContext.jsx';
-import App from './App.jsx';
-import LoginPage from './pages/auth/login.jsx';
-import SignUpPage from './pages/auth/register.jsx';
-import ProfilePage from './pages/profile/index.jsx';
-import AboutPage from './pages/about.jsx';
-import NotesListPage from './pages/notes/index.jsx';
-import MyNotesPage from './pages/my-notes/index.jsx';
+import { CursorModeProvider } from '@/contexts/CursorModeContext.jsx';
+import { AuthProvider, useAuth } from '@/contexts/AuthContext.jsx';
+import App from '@/App.jsx';
+import LoginPage from '@/pages/auth/login.jsx';
+import SignUpPage from '@/pages/auth/register.jsx';
+import ProfilePage from '@/pages/profile.jsx';
+import AboutPage from '@/pages/about.jsx';
+import NotesListPage from '@/pages/list-notes.jsx';
+import MyNotesPage from '@/pages/my_notes.jsx';
 
 
 const PrivateRoute = ({ children }) => {

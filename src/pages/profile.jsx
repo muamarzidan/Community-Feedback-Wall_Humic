@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import toast from "react-hot-toast";
 import { RiArrowRightSLine } from "react-icons/ri";
 import { TbLogout2 } from "react-icons/tb";
 import { TiExport } from "react-icons/ti";
 import { FiEdit3 } from "react-icons/fi";
 import { MdLock } from "react-icons/md";
-import toast from "react-hot-toast";
 
-import { userAPI, authAPI, adminApi } from "../../lib/api";
-import UpdatePasswordModal from "../../components/UpdatePasswordModal";
-import Layout from "../../components/common/Layout";
+import { userAPI, authAPI, adminApi } from "@/lib/api";
+import UpdatePasswordModal from "@/components/ui/page/auth/UpdatePasswordModal";
+import Layout from "@/components/ui/common/Layout";
 import photoProfile from "@/assets/icons/photoprofile-logo_agora_communityfeedback.webp";
 
 
@@ -70,7 +70,6 @@ export default function ProfilePage() {
             setEditingField(null);
             setEditValue('');
             
-            // Clear success message after 3 seconds
             setTimeout(() => {
                 setUpdateMessage({ type: '', text: '' });
             }, 3000);
@@ -102,27 +101,16 @@ export default function ProfilePage() {
     const handleExportData = async () => {
         try {
             const response = await adminApi.getDataExcel();
-            
-            // Get CSV data from response
             const csvData = response.data;
-            
-            // Create blob from CSV data
             const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
-            
-            // Create download link
             const link = document.createElement('a');
             const url = URL.createObjectURL(blob);
-            
-            // Set filename with current date
             const date = new Date().toISOString().split('T')[0];
+            
             link.setAttribute('href', url);
             link.setAttribute('download', `notes-export-${date}.csv`);
-            
-            // Trigger download
             document.body.appendChild(link);
             link.click();
-            
-            // Cleanup
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
         } catch (error) {
@@ -131,7 +119,6 @@ export default function ProfilePage() {
         }
     };
 
-    
     return (
         <Layout>
             <div className="min-h-screen px-6 py-16 bg-gray-50">
@@ -145,7 +132,6 @@ export default function ProfilePage() {
                                 alt="Profile Photo - Agora"
                                 className="object-cover w-16 h-16 rounded-full sm:w-24 sm:h-24"
                             />
-                            {/* <div className="w-24 h-24 bg-gray-200 rounded-full" /> */}
                         </div>
                         <div className="w-full sm:mt-6">
                             <p className="text-sm text-gray-500 sm:text-xl">Signed in as</p>
@@ -166,6 +152,7 @@ export default function ProfilePage() {
                                 {updateMessage.text}
                             </div>
                         )}
+                        {/* Action Buttons */}
                         <div className="flex flex-col gap-2 p-4 bg-white border border-gray-300 rounded-xl sm:rounded-none sm:border-0 sm:bg-transparent sm:p-0">
                             <div>
                                 <label className="text-sm font-semibold text-black sm:text-lg">Name</label>
@@ -330,7 +317,6 @@ export default function ProfilePage() {
                     </div>
                 </div>
             </div>
-            {/* Password Modal */}
             <UpdatePasswordModal 
                 isOpen={isPasswordModalOpen} 
                 onClose={() => setIsPasswordModalOpen(false)} 

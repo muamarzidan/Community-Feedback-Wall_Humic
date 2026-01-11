@@ -34,8 +34,7 @@ export default function LoginPage() {
             document.body.style.cursor = '';
         };
     }, []);
-
-    // Check rate limit on mount dan setiap detik jika blocked
+    // Check rate limit on mount
     useEffect(() => {
         const checkLimit = () => {
             const limit = checkRateLimit();
@@ -44,7 +43,6 @@ export default function LoginPage() {
 
         checkLimit();
 
-        // Update countdown setiap detik jika blocked
         let interval;
         if (rateLimit.isBlocked && rateLimit.remainingTime > 0) {
             interval = setInterval(checkLimit, 1000);
@@ -67,7 +65,6 @@ export default function LoginPage() {
         e.preventDefault();
         setError('');
 
-        // Check rate limit before submit
         const limit = checkRateLimit();
         if (limit.isBlocked) {
             setError(`Too many login attempts. Please wait ${formatRemainingTime(limit.remainingTime)} before trying again.`);
@@ -78,7 +75,6 @@ export default function LoginPage() {
         setLoading(true);
 
         try {
-            // Record attempt
             recordAttempt();
 
             const result = await login(formData);
@@ -87,7 +83,6 @@ export default function LoginPage() {
             } else {
                 setError(result.message);
                 
-                // Check if rate limited after this attempt
                 const newLimit = checkRateLimit();
                 setRateLimit(newLimit);
             };
@@ -103,6 +98,7 @@ export default function LoginPage() {
             <div className="flex w-full max-w-5xl overflow-hidden rounded-2xl">
                 {/* Left side */}
                 <div className="w-full p-6 sm:p-10 md:w-1/2">
+                    {/* Logo */}
                     <Link to="/" className="inline-block mb-2 text-3xl font-bold transition-colors hover:text-gray-700">
                         <img
                             src={logoAgora}

@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { LogIn, Menu, X } from 'lucide-react';
 
-import { useCursorMode } from '../../contexts/CursorModeContext';
-import { useAuth } from '../../contexts/AuthContext';
-import AuthModal from '../auth/AuthModal';
-import HomeIcon from '../../assets/icons/home-logo_agora_communityfeedback.png';
-import ListIcon from '../../assets/icons/listnote-logo_agora_communityfeedback.png';
-import AboutIcon from '../../assets/icons/about-logo_agora_communityfeedback.png';
-import MyNotesIcon from '../../assets/icons/mynotes-logo_agora_communityfeedback.svg';
+
+import { useCursorMode } from '@/contexts/CursorModeContext';
+import { useAuth } from '@/contexts/AuthContext';
+import AuthModal from '@/components/ui/page/auth/AuthModal';
+import HomeIcon from '@/assets/icons/home-logo_agora_communityfeedback.png';
+import ListIcon from '@/assets/icons/listnote-logo_agora_communityfeedback.png';
+import AboutIcon from '@/assets/icons/about-logo_agora_communityfeedback.png';
+import MyNotesIcon from '@/assets/icons/mynotes-logo_agora_communityfeedback.svg';
 
 
 const Sidebar = () => {
