@@ -13,6 +13,8 @@
     --color-primary-900: #11336b;
 }
 
+
+
 * {
     font-family: 'Plus Jakarta Sans', sans-serif;
 }
@@ -26,85 +28,12 @@ html, body {
     overflow-x: hidden;
 }
 
-/* Prevent scrolling on canvas page */
 body:has(.canvas-page) {
     overflow: hidden;
 }
 
-/* Custom styling for react-date-range */
-.rdrCalendarWrapper {
-    font-family: 'Poppins', sans-serif !important;
-}
-
-.rdrDateDisplayWrapper {
-    background-color: #f3f4f6;
-}
-
-.rdrMonthAndYearWrapper {
-    padding-top: 0;
-}
-
-.rdrDay:not(.rdrDayPassive) .rdrInRange,
-.rdrDay:not(.rdrDayPassive) .rdrStartEdge,
-.rdrDay:not(.rdrDayPassive) .rdrEndEdge,
-.rdrDay:not(.rdrDayPassive) .rdrSelected {
-    background-color: #2979ff !important;
-}
-
-.rdrDayToday .rdrDayNumber span:after {
-    background: #2979ff !important;
-}
-
-/* Mobile menu animation */
-@media (max-width: 640px) {
-    .mobile-menu-enter {
-        transform: translateX(-100%);
-    }
-    
-    .mobile-menu-enter-active {
-        transform: translateX(0);
-        transition: transform 300ms ease-in-out;
-    }
-    
-    .mobile-menu-exit {
-        transform: translateX(0);
-    }
-    
-    .mobile-menu-exit-active {
-        transform: translateX(-100%);
-        transition: transform 300ms ease-in-out;
-    }
-}
-
-.line-clamp-3 {
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
 
 
-/* Responsive reposition preset panel to bottom */
-@media (max-width: 768px) {
-    .rdrDateRangePickerWrapper {
-        display: flex !important;
-        flex-direction: column !important;
-    }
-
-    .rdrDefinedRangesWrapper {
-        order: 2; /* move presets below calendar */
-        width: 100% !important;
-        border-right: none !important;
-        border-top: 1px solid #e5e7eb; /* soft separator */
-    }
-
-    .rdrCalendarWrapper {
-        order: 1;
-        width: 100% !important;
-    }
-}
-
-/* Image Viewer Animations */
 @keyframes fadeIn {
     from {
         opacity: 0;
