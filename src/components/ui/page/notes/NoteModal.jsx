@@ -29,87 +29,104 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
     return !!localStorage.getItem('token_community-feedback');
   };
   
-  const measureTextHeight = (text, fontStyle, maxWidth, lineHeight) => {
-    if (!text) return 0;
+  const measureTextHeight = (text, fontSize, fontStyle, maxWidth, lineHeight) => {
+    if (!text || text.length === 0) return fontSize * lineHeight;
     
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
-    context.font = fontStyle;
+    context.font = `${fontStyle} ${fontSize}px Arial, sans-serif`;
     
     const words = text.split(' ');
-    let lines = [];
+    let lines = 1;
     let currentLine = '';
     
-    words.forEach(word => {
-      const testLine = currentLine ? `${currentLine} ${word}` : word;
+    for (let i = 0; i < words.length; i++) {
+      const testLine = currentLine + (currentLine ? ' ' : '') + words[i];
       const metrics = context.measureText(testLine);
       
-      if (metrics.width > maxWidth && currentLine) {
-        lines.push(currentLine);
-        currentLine = word;
+      if (metrics.width > maxWidth && currentLine !== '') {
+        lines++;
+        currentLine = words[i];
       } else {
         currentLine = testLine;
       }
-    });
-    
-    if (currentLine) {
-      lines.push(currentLine);
     }
     
-    return lines.length * lineHeight;
+    return Math.ceil(lines * fontSize * lineHeight);
   };
   const calculateNoteHeight = () => {
     const cardWidth = 355;
     const padding = 16;
     const contentWidth = cardWidth - (padding * 2); // 323px
+    const titleFontSize = 20;
+    const descFontSize = 14;
+    const titleLineHeight = 1.2;
+    const descLineHeight = 1.43;
+    const maxTitleLines = 3;
     
-    // Ukur tinggi title
-    const titleHeight = measureTextHeight(
+    // Measure title height (same as NoteCard)
+    const titleHeightRaw = measureTextHeight(
       formData.title,
-      18,
-      'bold 18px Arial',
+      titleFontSize,
+      'bold',
       contentWidth,
-      24
+      titleLineHeight
     );
     
-    // Ukur tinggi description
+    // Cap title at 3 lines maximum (same as NoteCard)
+    const maxTitleHeight = titleFontSize * titleLineHeight * maxTitleLines;
+    const titleHeight = Math.min(titleHeightRaw, maxTitleHeight);
+    
+    // Measure description height (same as NoteCard)
+    const descText = formData.description || '';
     const descHeight = measureTextHeight(
-      formData.description,
-      15,
-      '15px Arial',
+      descText,
+      descFontSize,
+      'normal',
       contentWidth,
-      20
+      descLineHeight
     );
     
-    // Hitung tinggi image jika ada
-    let imageHeight = 0;
-    if (formData.image || formData.imagePreview) {
-      // Estimasi tinggi image (akan disesuaikan dengan aspect ratio actual)
-      // Untuk preview, kita estimasi max height 200px
-      imageHeight = 200;
-    }
+    // Image height (match with NoteCard actual render)
+    const imageHeight = (formData.image || formData.imagePreview) ? 176 : 0;
     
-    // Total height calculation
-    const headerHeight = 5;
-    const headerGap = isAuthenticated() ? 36 : 24;
-    let totalHeight = padding; // Top padding
+    // Total height calculation (match with NoteCard)
+    let height = 0;
     
-    totalHeight += headerHeight + headerGap; // Header section
-    totalHeight += titleHeight + 8; // Title + gap
+    // Header section
+    height += padding; // Top padding: 16
+    height += 20; // Author name height
     
+    // Check if owner (authenticated user)
+    const isOwner = isAuthenticated();
+    height += (isOwner ? 36 : 24); // Space after header
+    
+    // Title
+    height += titleHeight;
+    height += 8; // Gap after title
+    
+    // Description
+    height += descHeight;
+    height += 12; // Gap after description
+    
+    // Image
     if (imageHeight > 0) {
-      totalHeight += imageHeight + 12; // Image + gap
+      height += imageHeight;
+      height += 10; // Gap after image
     }
     
-    if (descHeight > 0) {
-      totalHeight += descHeight + 12; // Description + gap
+    // Reactions
+    height += 26; // Reaction buttons height
+    
+    // Date for owner (below reactions)
+    if (isOwner) {
+      height += 8; // Gap before date
+      height += 18; // Date height
     }
     
-    totalHeight += 26 + 20; // Reactions section + gap
-    totalHeight += 16; // Date section
-    totalHeight += padding; // Bottom padding
+    height += padding;
     
-    return Math.ceil(totalHeight);
+    return Math.ceil(height);
   };
   
   useEffect(() => {
@@ -144,26 +161,15 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
       return;
     };
     
-    // Hitung height sebelum submit
     const calculatedHeight = calculateNoteHeight();
-    
-    console.log('CALCULATED NOTE HEIGHT:', {
-      title: formData.title,
-      description: formData.description,
-      hasImage: !!formData.image || !!formData.imagePreview,
-      calculatedHeight: calculatedHeight,
-      timestamp: new Date().toISOString()
-    });
-    
     const noteData = {
       ...formData,
       id: note?.id || Date.now(),
       createdAt: note?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      height: calculatedHeight, // Tambahkan height
+      height: calculatedHeight,
     };
 
-    // Remove imagePreview from data sent to API
     delete noteData.imagePreview;
     
     onSave(noteData);
@@ -183,30 +189,24 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
     setImageError('');
 
     try {
-      // File size check (5MB)
       if (file.size > 5 * 1024 * 1024) {
         setImageError('Image size must be less than 5MB');
         setImageLoading(false);
         return;
       }
-
-      // File type check
       if (!['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(file.type)) {
         setImageError('Only JPG, PNG, or WEBP files are allowed');
         setImageLoading(false);
         return;
       }
 
-      // Validate image dimension (max 3000x3000)
       const result = await validateImageDimension(file);
-
       if (!result.isValid) {
         setImageError(result.message);
         setImageLoading(false);
         return;
       }
 
-      // Dimension valid, use original file
       setFormData(prev => ({
         ...prev,
         image: result.file,
@@ -214,7 +214,6 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
         delete_image: false
       }));
 
-      // Clear any previous errors
       setImageError('');
     } catch (error) {
       console.error('Error processing image:', error);
@@ -228,33 +227,33 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
       ...prev,
       image: null,
       imagePreview: null,
-      delete_image: note?.image ? true : false // Only set delete flag if there was an existing image
+      delete_image: note?.image ? true : false
     }));
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100]">
-      <div className="w-full max-w-md mx-4 bg-white rounded-lg shadow-xl">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] ease-in-out transition-all duration-500">
+      <div className="w-full max-w-md mx-4 bg-white shadow-xl rounded-xl">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-300">
+        <div className="flex items-center justify-between px-6 py-6">
           <h2 className="text-lg font-semibold text-gray-900">
-            {note ? 'Edit Note' : 'Create New Note'}
+            {note ? 'Edit Feedback' : 'Add New Feedback'}
           </h2>
-          <button
+          {/* <button
             onClick={onClose}
             className="text-gray-400 transition-colors cursor-pointer hover:text-gray-600"
           >
             <X className="w-6 h-6" />
-          </button>
+          </button> */}
         </div>
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-3">
           {/* Email (Only for guest users) */}
           {!isAuthenticated() && (
             <div>
-              <label className="block mb-2 text-sm font-medium text-gray-700">
+              <label className="block mb-2 text-sm font-medium text-gray-900">
                 Email <span className="text-red-500">*</span>
               </label>
               <input
@@ -262,7 +261,7 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
                 value={formData.email}
                 onChange={(e) => handleChange('email', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter your email..."
+                placeholder="Add email..."
                 required
               />
               <p className="mt-1 text-xs text-gray-500">Required for guest users</p>
@@ -270,7 +269,7 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
           )}
           {/* Title */}
           <div>
-            <label className="block mb-2 text-sm font-medium text-gray-700">
+            <label className="block mb-2 text-sm font-medium text-gray-900">
               Title
             </label>
             <input
@@ -278,13 +277,13 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
               value={formData.title}
               onChange={(e) => handleChange('title', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter note title..."
+              placeholder="Add title..."
               required
             />
           </div>
           {/* Description */}
           <div>
-            <label className="block mb-2 text-sm font-medium text-gray-700">
+            <label className="block mb-2 text-sm font-medium text-gray-900">
               Description
             </label>
             <textarea
@@ -292,7 +291,7 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
               onChange={(e) => handleChange('description', e.target.value)}
               rows={4}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter note description..."
+              placeholder="Write your feedback..."
             />
           </div>
           {/* Background Color */}
@@ -300,13 +299,13 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
             <label className="block mb-2 text-sm font-medium text-gray-700">
               Background Color
             </label>
-            <div className="grid grid-cols-6 gap-2">
+            <div className="flex justify-center gap-3">
               {colorOptions.map((color) => (
                 <button
                   key={color.value}
                   type="button"
                   onClick={() => handleChange('backgroundColor', color.value)}
-                  className={`w-10 h-10 rounded-lg border-2 transition-all ${
+                  className={`w-10 h-10 rounded-full border-2 transition-all cursor-pointer ${
                     formData.backgroundColor === color.value
                       ? 'border-gray-800 scale-110'
                       : 'border-gray-300 hover:border-gray-400'
@@ -378,7 +377,7 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 text-gray-700 transition-colors bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200"
+              className="flex-1 px-4 py-2 text-gray-700 transition-colors bg-gray-100 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-200"
             >
               Cancel
             </button>
@@ -386,7 +385,7 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
               type="submit"
               className="flex-1 px-4 py-2 text-white transition-colors bg-blue-500 rounded-lg cursor-pointer hover:bg-blue-600"
             >
-              {note ? 'Update' : 'Create'}
+              {note ? 'Update' : 'Add'}
             </button>
           </div>
         </form>
