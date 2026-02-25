@@ -73,13 +73,12 @@ export const AuthProvider = ({ children }) => {
     const logout = async () => {
         try {
             await authAPI.logout();
-        } catch (error) {
-            console.error('Logout error:', error);
-        } finally {
             localStorage.removeItem('token_community-feedback');
             localStorage.removeItem('user-data_community-feedback');
             setUser(null);
             navigate('/login');
+        } catch (error) {
+            console.error('Logout error:', error);
         };
     };
     const updateUserData = (updatedUser) => {

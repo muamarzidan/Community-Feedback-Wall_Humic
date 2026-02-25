@@ -18,6 +18,7 @@ const Sidebar = () => {
     const { setCursorMode } = useCursorMode();
     const { user, isAuthenticated, logout } = useAuth();
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+    const [authModalMode, setAuthModalMode] = useState('login');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
     
@@ -60,6 +61,19 @@ const Sidebar = () => {
     const handleModalClose = () => {
         setIsAuthModalOpen(false);
     };
+    
+    // Listen for event to open AuthModal from Terms/Privacy pages
+    useEffect(() => {
+        const handleOpenAuthModal = (event) => {
+            if (event.detail?.mode) {
+                setAuthModalMode(event.detail.mode);
+                setIsAuthModalOpen(true);
+            }
+        };
+        
+        window.addEventListener('openAuthModal', handleOpenAuthModal);
+        return () => window.removeEventListener('openAuthModal', handleOpenAuthModal);
+    }, []);
     
     // Check screen size for mobile menu state
     useEffect(() => {
@@ -236,7 +250,7 @@ const Sidebar = () => {
         <AuthModal 
             isOpen={isAuthModalOpen} 
             onClose={handleModalClose}
-            initialMode="login"
+            initialMode={authModalMode}
         />
         <div className="sm:hidden">
             <MobileNavbar />

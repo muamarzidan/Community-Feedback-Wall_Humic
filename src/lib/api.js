@@ -45,6 +45,16 @@ export const authAPI = {
   logout: () => api.post('/api/logout'),
   getMeCurrentUser: () => api.get('/api/me'),
 };
+
+export const passwordResetAPI = {
+  // Send verification code to email (Step 1)
+  sendResetEmail: (email) => api.post('/api/forgot-password', { email }),
+  // Verify OTP code (Step 2)
+  verifyResetCode: (email, token) => api.post('/api/verify-reset-code', { email, token }),
+  // Reset password with new password (Step 3)
+  resetPassword: (data) => api.post('/api/reset-password', data), // { email, token, password, password_confirmation }
+};
+
 export const userAPI = {
   getUser: () => api.get('/api/user'),
   updateProfile: (userData) => api.put('/api/profile', userData),

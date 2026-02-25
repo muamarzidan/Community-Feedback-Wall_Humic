@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
-import { FcGoogle } from "react-icons/fc";
 import { HiOutlineEyeOff, HiOutlineEye } from "react-icons/hi";
 import { checkRateLimit, recordAttempt, formatRemainingTime } from '@/utils/rateLimiter';
 
@@ -13,11 +13,13 @@ import RegisterBanner from '@/assets/images/register-banner-agora.webp';
 
 export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
     const { login, register } = useAuth();
+    const navigate = useNavigate();
     const [mode, setMode] = useState(initialMode);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [termsAccepted, setTermsAccepted] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -31,6 +33,36 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
         remainingTime: 0
     });
 
+    // Sync mode dengan initialMode saat modal dibuka
+    useEffect(() => {
+        if (isOpen) {
+            setMode(initialMode);
+        }
+    }, [isOpen, initialMode]);
+
+    // Restore form data saat modal dibuka dengan mode register
+    useEffect(() => {
+        if (isOpen && initialMode === 'register') {
+            // Restore form data
+            const savedFormData = sessionStorage.getItem('authmodal_form_data');
+            if (savedFormData) {
+                try {
+                    const parsedData = JSON.parse(savedFormData);
+                    setFormData(parsedData);
+                    sessionStorage.removeItem('authmodal_form_data');
+                } catch (error) {
+                    console.error('Error parsing saved form data:', error);
+                }
+            }
+            
+            // Restore termsAccepted status
+            const savedTermsAccepted = sessionStorage.getItem('authmodal_terms_accepted');
+            if (savedTermsAccepted === 'true') {
+                setTermsAccepted(true);
+                sessionStorage.removeItem('authmodal_terms_accepted');
+            }
+        }
+    }, [isOpen, initialMode]);
 
     // Check rate limit on mount
     useEffect(() => {
@@ -53,6 +85,18 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
             if (interval) clearInterval(interval);
         };
     }, [isOpen, rateLimit.isBlocked]);
+    
+    // Listen for terms acceptance from Terms/Privacy pages
+    useEffect(() => {
+        const handleTermsAccepted = (event) => {
+            if (event.detail?.accepted) {
+                setTermsAccepted(true);
+            }
+        };
+        
+        window.addEventListener('termsAccepted', handleTermsAccepted);
+        return () => window.removeEventListener('termsAccepted', handleTermsAccepted);
+    }, []);
     
     if (!isOpen) return null;
 
@@ -125,11 +169,13 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
             setLoading(false);
         };
     };
+
     const switchMode = (newMode) => {
         setMode(newMode);
         setShowPassword(false);
         setShowConfirmPassword(false);
         setError('');
+        setTermsAccepted(false);
         setFormData({
             name: '',
             email: '',
@@ -210,9 +256,17 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                                     />
                                     Remember me
                                 </label>
-                                <a href="#" className="text-red-400 hover:text-red-500 !cursor-pointer">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        sessionStorage.setItem('forgot_password_flow', 'true');
+                                        onClose();
+                                        navigate('/RESET-send-email');
+                                    }}
+                                    className="text-red-400 hover:text-red-500 !cursor-pointer"
+                                >
                                     Forgot Password
-                                </a>
+                                </button>
                             </div>
                             <button
                                 type="submit"
@@ -236,19 +290,6 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                                     Sign up
                                 </button>
                             </p>
-                            <div className="flex items-center my-4">
-                                <hr className="flex-grow border-gray-300" />
-                                <span className="px-2 text-sm text-gray-400">Or login with</span>
-                                <hr className="flex-grow border-gray-300" />
-                            </div>
-                            <div className="flex justify-center w-full gap-4">
-                                <button
-                                    type="button"
-                                    className="flex items-center justify-center w-full gap-2 px-6 py-2 transition border border-gray-300 rounded-md hover:bg-gray-50 !cursor-pointer"
-                                >
-                                    <FcGoogle className="w-5 h-5" />
-                                </button>
-                            </div>
                         </form>
                     </div>
                 ) : (
@@ -333,22 +374,43 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                                 </button>
                             </div>
                             <div className="flex items-start gap-2 text-sm text-gray-600">
-                                <input type="checkbox" className="mt-1 accent-indigo-500" required />
+                                <input 
+                                    type="checkbox" 
+                                    checked={termsAccepted}
+                                    onChange={(e) => setTermsAccepted(e.target.checked)}
+                                    className="mt-1 cursor-pointer accent-indigo-500" 
+                                />
                                 <p>
                                     I agree to all the{" "}
-                                    <a href="#" className="font-medium text-red-500 hover:text-red-600">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            sessionStorage.setItem('authmodal_form_data', JSON.stringify(formData));
+                                            onClose();
+                                            navigate('/terms?returnTo=modal');
+                                        }}
+                                        className="font-medium text-red-500 hover:underline"
+                                    >
                                         Terms
-                                    </a>{" "}
+                                    </button>{" "}
                                     and{" "}
-                                    <a href="#" className="font-medium text-red-500 hover:text-red-600">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            sessionStorage.setItem('authmodal_form_data', JSON.stringify(formData));
+                                            onClose();
+                                            navigate('/privacy?returnTo=modal');
+                                        }}
+                                        className="font-medium text-red-500 hover:underline"
+                                    >
                                         Privacy Policies
-                                    </a>
+                                    </button>
                                 </p>
                             </div>
                             <button
                                 type="submit"
                                 className="w-full py-2 mt-4 text-white transition bg-indigo-500 rounded-md hover:bg-indigo-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                                disabled={loading || rateLimit.isBlocked}
+                                disabled={loading || rateLimit.isBlocked || !termsAccepted}
                             >
                                 {rateLimit.isBlocked
                                     ? `Wait ${formatRemainingTime(rateLimit.remainingTime)}`
@@ -367,19 +429,6 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }) {
                                     Login
                                 </button>
                             </p>
-                            <div className="flex items-center my-4">
-                                <hr className="flex-grow border-gray-300" />
-                                <span className="px-2 text-sm text-gray-400">Or Sign up with</span>
-                                <hr className="flex-grow border-gray-300" />
-                            </div>
-                            <div className="flex justify-center w-full gap-4">
-                                <button
-                                    type="button"
-                                    className="flex items-center justify-center w-full gap-2 px-6 py-2 transition border border-gray-300 rounded-md hover:bg-gray-50 !cursor-pointer"
-                                >
-                                    <FcGoogle className="w-5 h-5" />
-                                </button>
-                            </div>
                         </form>
                     </div>
                 )}

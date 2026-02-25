@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
 import { CursorModeProvider } from '@/contexts/CursorModeContext.jsx';
@@ -8,10 +8,15 @@ import { PrivateRoute, GuestRoute } from '@/components/server/common/ProtectRout
 import App from '@/App.jsx';
 import LoginPage from '@/pages/auth/login.jsx';
 import SignUpPage from '@/pages/auth/register.jsx';
-import ProfilePage from '@/pages/profile.jsx';
+import SendEmailPage from '@/pages/auth/reset_password/send-email.jsx';
+import VerificationEmailCodePage from '@/pages/auth/reset_password/verification-email-code.jsx';
+import NewPasswordPage from '@/pages/auth/reset_password/new-password.jsx';
+import ProfilePage from '@/pages/profile.jsx';  
 import AboutPage from '@/pages/about.jsx';
 import NotesListPage from '@/pages/list-notes.jsx';
 import MyNotesPage from '@/pages/my_notes.jsx';
+import TermsConditions from '@/pages/terms-conditions.jsx';
+import PrivacyPolicy from '@/pages/privacy-policy.jsx';
 
 
 function RouterContent() {
@@ -21,6 +26,8 @@ function RouterContent() {
         <Route path="/" element={<App />} />
         <Route path="/notes" element={<NotesListPage />} />
         <Route path="/about" element={<AboutPage />} />
+        <Route path="/terms" element={<TermsConditions />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route 
           path="/my-notes" 
           element={
@@ -50,6 +57,30 @@ function RouterContent() {
           element={
             <GuestRoute>
               <SignUpPage />
+            </GuestRoute>
+          } 
+        />
+        <Route 
+          path="/RESET-send-email" 
+          element={
+            <GuestRoute>
+              <SendEmailPage />
+            </GuestRoute>
+          } 
+        />
+        <Route 
+          path="/RESET-verification-email-code" 
+          element={
+            <GuestRoute>
+              <VerificationEmailCodePage />
+            </GuestRoute>
+          } 
+        />
+        <Route 
+          path="/RESET-new-password" 
+          element={
+            <GuestRoute>
+              <NewPasswordPage />
             </GuestRoute>
           } 
         />

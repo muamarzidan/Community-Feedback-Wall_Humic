@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { FcGoogle } from "react-icons/fc";
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { IoArrowBack } from "react-icons/io5";
 import { HiOutlineEyeOff, HiOutlineEye } from "react-icons/hi";
 
@@ -24,19 +23,37 @@ export default function SignUpPage() {
         password: '',
         password_confirmation: ''
     });
+    const [termsAccepted, setTermsAccepted] = useState(false);
     const [rateLimit, setRateLimit] = useState({
         isBlocked: false,
         remainingTime: 0
     });
+    const [searchParams] = useSearchParams();
 
-    // Reset cursor to default on auth pages
+    // Restore form data dari sessionStorage saat component mount
+    useEffect(() => {
+        const savedFormData = sessionStorage.getItem('register_form_data');
+        if (savedFormData) {
+            try {
+                const parsedData = JSON.parse(savedFormData);
+                setFormData(parsedData);
+                sessionStorage.removeItem('register_form_data');
+            } catch (error) {
+                console.error('Error parsing saved form data:', error);
+            }
+        }
+    }, []);
     useEffect(() => {
         document.body.style.cursor = 'default';
         return () => {
             document.body.style.cursor = '';
         };
     }, []);
-    // Check rate limit on mount
+    useEffect(() => {
+        if (searchParams.get('termsAccepted') === 'true') {
+            setTermsAccepted(true);
+        }
+    }, [searchParams]);
     useEffect(() => {
         const checkLimit = () => {
             const limit = checkRateLimit();
@@ -91,13 +108,14 @@ export default function SignUpPage() {
                 
                 const newLimit = checkRateLimit();
                 setRateLimit(newLimit);
-            };
+            }
         } catch (err) {
             setError('Terjadi kesalahan. Silakan coba lagi.');
         } finally {
             setLoading(false);
-        };
+        }
     };
+
     
     return (
         <div className="flex items-center justify-center min-h-screen bg-white">
@@ -157,14 +175,6 @@ export default function SignUpPage() {
                                 disabled={rateLimit.isBlocked || loading}
                             />
                         </div>
-                        <div>
-                            <input
-                                type="tel"
-                                placeholder="Phone Number"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                                disabled={rateLimit.isBlocked || loading}
-                            />
-                        </div>
                         <div className="relative">
                             <input
                                 type={showPassword ? "text" : "password"}
@@ -214,10 +224,42 @@ export default function SignUpPage() {
                                 )}
                             </button>
                         </div>
+                        <div className="flex items-start gap-2 text-sm text-gray-600">
+                            <input 
+                                type="checkbox" 
+                                checked={termsAccepted}
+                                onChange={(e) => setTermsAccepted(e.target.checked)}
+                                className="mt-1 cursor-pointer accent-primary-500" 
+                            />
+                            <p>
+                                I agree to all the{" "}
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        sessionStorage.setItem('register_form_data', JSON.stringify(formData));
+                                        navigate('/terms?returnTo=register');
+                                    }}
+                                    className="font-medium text-red-500 hover:underline"
+                                >
+                                    Terms
+                                </button>{" "}
+                                and{" "}
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        sessionStorage.setItem('register_form_data', JSON.stringify(formData));
+                                        navigate('/privacy?returnTo=register');
+                                    }}
+                                    className="font-medium text-red-500 hover:underline"
+                                >
+                                    Privacy Policies
+                                </button>
+                            </p>
+                        </div>
                         <button
                             type="submit"
                             className="!cursor-pointer w-full py-2 text-white transition bg-primary-500 rounded-md hover:bg-primary-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                            disabled={loading || rateLimit.isBlocked}
+                            disabled={loading || rateLimit.isBlocked || !termsAccepted}
                         >
                             {rateLimit.isBlocked 
                                 ? `Wait ${formatRemainingTime(rateLimit.remainingTime)}` 
@@ -226,33 +268,12 @@ export default function SignUpPage() {
                                 : 'Create Account'
                             }
                         </button>
-                        <div className="flex items-start gap-2 text-sm text-gray-600">
-                            <input type="checkbox" className="mt-1 cursor-pointer accent-primary-500" required />
-                            <p>
-                                I agree to all the{" "}
-                                <a href="#" className="font-medium text-red-500">
-                                    Terms
-                                </a>{" "}
-                                and{" "}
-                                <a href="#" className="font-medium text-red-500">
-                                    Privacy Policies
-                                </a>
-                            </p>
-                        </div>
                         <p className="text-sm text-center text-gray-600">
                             Already have an account?{" "}
                             <Link to="/login" className="font-medium text-red-500 hover:text-red-600 !cursor-pointer">
                                 Login
                             </Link>
                         </p>
-                        <div className="flex items-center my-4">
-                            <hr className="flex-grow border-gray-300" />
-                            <span className="px-2 text-sm text-gray-400">Or Sign up with</span>
-                            <hr className="flex-grow border-gray-300" />
-                        </div>
-                        <button type="button" className="flex items-center justify-center w-full gap-2 px-6 py-2 transition-colors border border-gray-300 rounded-lg !cursor-pointer hover:bg-gray-100">
-                            <FcGoogle className="w-5 h-5" />
-                        </button>
                         <Link to="/" className='flex items-center justify-center gap-2'>
                             <IoArrowBack className='w-4 h-4 text-gray-600'/>         
                             <p className='text-sm text-gray-600'>Back to home</p>
