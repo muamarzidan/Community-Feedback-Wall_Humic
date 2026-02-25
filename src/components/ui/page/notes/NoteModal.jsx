@@ -155,7 +155,19 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
   
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!formData.title.trim()) return;
+    
+    if (!formData.title.trim()) {
+      alert('Title is required');
+      return;
+    }
+    if (!formData.description.trim()) {
+      alert('Description is required');
+      return;
+    }
+    if (!formData.backgroundColor) {
+      alert('Please select a background color');
+      return;
+    }
     if (!isAuthenticated() && !formData.email.trim()) {
       alert('Email is required for guest users');
       return;
@@ -270,7 +282,7 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
           {/* Title */}
           <div>
             <label className="block mb-2 text-sm font-medium text-gray-900">
-              Title
+              Title <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -284,7 +296,7 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
           {/* Description */}
           <div>
             <label className="block mb-2 text-sm font-medium text-gray-900">
-              Description
+              Description <span className="text-red-500">*</span>
             </label>
             <textarea
               value={formData.description}
@@ -292,12 +304,13 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
               rows={4}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Write your feedback..."
+              required
             />
           </div>
           {/* Background Color */}
           <div>
             <label className="block mb-2 text-sm font-medium text-gray-700">
-              Background Color
+              Background Color <span className="text-red-500">*</span>
             </label>
             <div className="flex justify-center gap-3">
               {colorOptions.map((color) => (

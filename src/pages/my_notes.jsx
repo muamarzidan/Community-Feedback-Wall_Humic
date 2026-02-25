@@ -266,9 +266,24 @@ export default function MyNotesPage() {
             });
         } catch (error) {
             console.error('Error deleting note:', error);
+            
+            let errorMessage = 'Failed to delete note';
+            
+            if (error.response?.data?.message) {
+                errorMessage = error.response.data.message;
+            } else if (error.response?.data?.errors) {
+                const errors = error.response.data.errors;
+                const firstErrorKey = Object.keys(errors)[0];
+                if (firstErrorKey && errors[firstErrorKey]?.[0]) {
+                    errorMessage = errors[firstErrorKey][0];
+                }
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+            
             setToast({
                 isOpen: true,
-                message: 'Failed to delete note',
+                message: errorMessage,
                 type: 'error'
             });
         }
@@ -317,9 +332,24 @@ export default function MyNotesPage() {
             });
         } catch (error) {
             console.error('Error saving note:', error);
+            
+            let errorMessage = 'Failed to save note';
+            
+            if (error.response?.data?.message) {
+                errorMessage = error.response.data.message;
+            } else if (error.response?.data?.errors) {
+                const errors = error.response.data.errors;
+                const firstErrorKey = Object.keys(errors)[0];
+                if (firstErrorKey && errors[firstErrorKey]?.[0]) {
+                    errorMessage = errors[firstErrorKey][0];
+                }
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+            
             setToast({
                 isOpen: true,
-                message: error.message || 'Failed to save note',
+                message: errorMessage,
                 type: 'error'
             });
         }
