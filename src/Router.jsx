@@ -14,7 +14,7 @@ import NewPasswordPage from '@/pages/auth/reset_password/new-password.jsx';
 import ProfilePage from '@/pages/profile.jsx';  
 import AboutPage from '@/pages/about.jsx';
 import NotesListPage from '@/pages/list-notes.jsx';
-import MyNotesPage from '@/pages/my_notes.jsx';
+import MyNotesPage from '@/pages/my-notes.jsx';
 import TermsConditions from '@/pages/terms-conditions.jsx';
 import PrivacyPolicy from '@/pages/privacy-policy.jsx';
 
