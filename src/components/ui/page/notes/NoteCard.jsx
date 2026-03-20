@@ -229,9 +229,6 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, on
         height={cardHeight}
         fill={note.backgroundColor || '#fef3c7'}
         cornerRadius={cornerRadius}
-        shadowColor="rgba(0,0,0,0.1)"
-        shadowOffset={{ x: 0, y: 2 }}
-        shadowBlur={8}
         stroke="#e5e7eb"
         strokeWidth={1}
       />
