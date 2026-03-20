@@ -20,7 +20,8 @@ import './App.css';
 function App() {
   const { 
     notes, 
-    currentCanvasId,
+    currentCanvasPage,
+    totalCanvases,
     navigation,
     addNote, 
     updateNote, 
@@ -31,8 +32,7 @@ function App() {
     canGuestCreateNote,
     goToCanvas,
     goToPreviousCanvas,
-    goToNextCanvas,
-    goToCurrentActiveCanvas
+    goToNextCanvas
   } = useCanvasNotes();
   const { cursorMode, setCursorMode } = useCursorMode();
   const [zoom, setZoom] = useState(1);
@@ -247,12 +247,12 @@ function App() {
         {/* Pagination */}
         <div className="absolute z-50 flex justify-center w-full transform -translate-x-1/2 bottom-20 sm:bottom-6 left-1/2">
           <Pagination
-            currentCanvasId={currentCanvasId}
+            currentPage={currentCanvasPage}
+            totalPages={totalCanvases}
             navigation={navigation}
             onCanvasChange={goToCanvas}
             onPrevious={goToPreviousCanvas}
             onNext={goToNextCanvas}
-            onGoToCurrent={goToCurrentActiveCanvas}
           />
         </div>
         {/* Cursor Mode */}

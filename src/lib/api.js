@@ -75,9 +75,7 @@ export const userAPI = {
   },
 };
 export const canvasNotesAPI = {
-  // getCurrentCanvasNotes: () => api.get('/api/canvas/current/notes'),
-  getCurrentCanvasNotes: () => api.get('/api/notes/spiral'),
-  getCanvasById: (canvasId) => api.get(`/api/canvas/${canvasId}`),
+  getCanvasByPage: (page) => api.get(`/api/canvas/page/${page}`),
   getCanvasNotesByID: (canvasId) => api.get(`/api/canvas/${canvasId}/notes`),
   createNote: (noteData) => {
     const formData = new FormData();

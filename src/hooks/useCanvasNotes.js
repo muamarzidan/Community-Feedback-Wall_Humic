@@ -10,6 +10,8 @@ export const useCanvasNotes = () => {
   const [notes, setNotes] = useState([]);
   const [canvasInfo, setCanvasInfo] = useState(null);
   const [currentCanvasId, setCurrentCanvasId] = useState(null);
+  const [currentCanvasPage, setCurrentCanvasPage] = useState(null);
+  const [totalCanvases, setTotalCanvases] = useState(0);
   const [navigation, setNavigation] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -38,24 +40,16 @@ export const useCanvasNotes = () => {
       setLoading(true);
       setError(null);
 
-      const response = await canvasNotesAPI.getCurrentCanvasNotes();
-      if (response.data && response.data.data) {
-        const data = response.data.data;
-        const apiNotes = data.notes || [];
-        
-        setCurrentCanvasId(data.canvas_id);
-        setCanvasInfo({
-          canvasId: data.canvas_id,
-          positioning: data.positioning,
-        });
-        
-        const transformedNotes = apiNotes.map((note, index) => 
-          transformNoteFromAPI(note, index)
-        );
-        setNotes(transformedNotes);
-        
-        fetchCanvasInfo(data.canvas_id);
+      // Resolve active canvas page from page-based endpoint, then load that page.
+      const firstPageResponse = await canvasNotesAPI.getCanvasByPage(1);
+      const firstPageData = firstPageResponse?.data?.data;
+      if (!firstPageData) {
+        setNotes([]);
+        return;
       }
+
+      const activePage = firstPageData?.navigation?.current_active_canvas?.page || 1;
+      await fetchCanvasByPage(activePage);
     } catch (err) {
       console.error('Error fetching current canvas:', err);
       setError(err.message || 'Failed to fetch notes');
@@ -64,55 +58,45 @@ export const useCanvasNotes = () => {
       setLoading(false);
     };
   };
-  const fetchCanvasInfo = async (canvasId) => {
+  const fetchCanvasByPage = async (page) => {
     try {
-      const response = await canvasNotesAPI.getCanvasById(canvasId);
-      if (response.data && response.data.data) {
-        const data = response.data.data;
-        setNavigation(data.navigation);
-        setCanvasInfo(prev => ({
-          ...prev,
-          notesCount: data.notes_count,
-          currentCount: data.current_count,
-          isFull: data.is_full,
-          remainingSlots: data.remaining_slots,
-          isCurrentActive: data.is_current_active,
-        }));
+      const response = await canvasNotesAPI.getCanvasByPage(page);
+      const data = response?.data?.data;
+      if (!data || !data.canvas) {
+        setNotes([]);
+        return;
       }
-    } catch (err) {
-      console.error('Error fetching canvas info:', err);
-    }
-  };
-  const fetchCanvasByID = async (canvasId) => {
-    try {
-      setLoading(true);
-      setError(null);
+
+      const canvasId = data.canvas.id;
+      setCurrentCanvasId(canvasId);
+      setCurrentCanvasPage(data.page);
+      setTotalCanvases(data.total_canvases || 0);
+      setNavigation(data.navigation || null);
+
+      setCanvasInfo({
+        canvasId: canvasId,
+        page: data.page,
+        totalCanvases: data.total_canvases || 0,
+        notesCount: data.canvas.notes_count,
+        currentCount: data.canvas.current_count,
+        isFull: data.canvas.is_full,
+        remainingSlots: data.canvas.remaining_slots,
+        isCurrentActive: data.canvas.is_current_active,
+      });
 
       const notesResponse = await canvasNotesAPI.getCanvasNotesByID(canvasId);
-      if (notesResponse.data && notesResponse.data.data) {
-        const data = notesResponse.data.data;
-        const apiNotes = data.notes || [];
-        
-        setCurrentCanvasId(data.canvas_id);
-        setCanvasInfo({
-          canvasId: data.canvas_id,
-          canvasCount: data.canvas_count,
-        });
-        
-        const transformedNotes = apiNotes.map((note, index) => 
-          transformNoteFromAPI(note, index)
-        );
-        setNotes(transformedNotes);
-        
-        fetchCanvasInfo(canvasId);
-      }
+      const notesData = notesResponse?.data?.data;
+      const apiNotes = notesData?.notes || [];
+
+      const transformedNotes = apiNotes.map((note, index) =>
+        transformNoteFromAPI(note, index)
+      );
+      setNotes(transformedNotes);
     } catch (err) {
-      console.error('Error fetching canvas by ID:', err);
+      console.error('Error fetching canvas by page:', err);
       setError(err.message || 'Failed to fetch canvas');
       setNotes([]);
-    } finally {
-      setLoading(false);
-    };
+    }
   };
   const transformNoteFromAPI = (apiNote, index = 0) => {
     const currentUser = getCurrentUser();
@@ -240,8 +224,8 @@ export const useCanvasNotes = () => {
 
       const response = await canvasNotesAPI.updateNote(noteId, apiData);
       if (response.data) {
-        if (currentCanvasId) {
-          await fetchCanvasByID(currentCanvasId);
+        if (currentCanvasPage) {
+          await fetchCanvasByPage(currentCanvasPage);
         } else {
           await fetchCurrentCanvas();
         }
@@ -260,8 +244,8 @@ export const useCanvasNotes = () => {
 
       await canvasNotesAPI.deleteNote(noteId);
       
-      if (currentCanvasId) {
-        await fetchCanvasByID(currentCanvasId);
+      if (currentCanvasPage) {
+        await fetchCanvasByPage(currentCanvasPage);
       } else {
         await fetchCurrentCanvas();
       }
@@ -309,22 +293,22 @@ export const useCanvasNotes = () => {
       throw err;
     };
   };
-  const goToCanvas = (canvasId) => {
-    fetchCanvasByID(canvasId);
+  const goToCanvas = (page) => {
+    fetchCanvasByPage(page);
   };
   const goToPreviousCanvas = () => {
-    if (navigation?.previous_canvas) {
-      fetchCanvasByID(navigation.previous_canvas.id);
+    if (navigation?.previous_page) {
+      fetchCanvasByPage(navigation.previous_page);
     }
   };
   const goToNextCanvas = () => {
-    if (navigation?.next_canvas) {
-      fetchCanvasByID(navigation.next_canvas.id);
+    if (navigation?.next_page) {
+      fetchCanvasByPage(navigation.next_page);
     }
   };
   const goToCurrentActiveCanvas = () => {
-    if (navigation?.current_active_canvas) {
-      fetchCanvasByID(navigation.current_active_canvas.id);
+    if (navigation?.current_active_canvas?.page) {
+      fetchCanvasByPage(navigation.current_active_canvas.page);
     } else {
       fetchCurrentCanvas();
     }
@@ -334,6 +318,8 @@ export const useCanvasNotes = () => {
     notes,
     canvasInfo,
     currentCanvasId,
+    currentCanvasPage,
+    totalCanvases,
     navigation,
     loading,
     error,
