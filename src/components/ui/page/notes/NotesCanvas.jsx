@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useMemo } from 'react';
 import { Stage, Layer } from 'react-konva';
 
 import { closeAllMenus } from '@/utils/domUtils';
@@ -20,7 +20,27 @@ const NotesCanvas = ({
   height = window.innerHeight 
 }) => {
   const stageRef = useRef(null);
+  const dragRafRef = useRef(null);
+  const pendingPositionRef = useRef({ x: 0, y: 0 });
   const [stagePosition, setStagePosition] = useState({ x: 0, y: 0 });
+
+  const updateStagePosition = (nextPosition) => {
+    pendingPositionRef.current = nextPosition;
+    if (dragRafRef.current) return;
+
+    dragRafRef.current = requestAnimationFrame(() => {
+      setStagePosition(pendingPositionRef.current);
+      dragRafRef.current = null;
+    });
+  };
+
+  useEffect(() => {
+    return () => {
+      if (dragRafRef.current) {
+        cancelAnimationFrame(dragRafRef.current);
+      }
+    };
+  }, []);
 
   // Handle wheel zoom
   useEffect(() => {
@@ -49,7 +69,7 @@ const NotesCanvas = ({
       };
       
       stage.position(newPos);
-      setStagePosition(newPos);
+      updateStagePosition(newPos);
     };
 
     stage.on('wheel', handleWheel);
@@ -63,8 +83,11 @@ const NotesCanvas = ({
     stage.scale({ x: zoom, y: zoom });
   }, [zoom]);
   
+  const handleDragMove = (e) => {
+    updateStagePosition(e.target.position());
+  };
   const handleDragEnd = (e) => {
-    setStagePosition(e.target.position());
+    updateStagePosition(e.target.position());
   };
   const handleMouseDown = (e) => {
     // Check if clicking on empty space (stage background)
@@ -80,6 +103,35 @@ const NotesCanvas = ({
       return;
     };
   };
+
+  const visibleNotes = useMemo(() => {
+    const cardWidth = 355;
+    const defaultCardHeight = 320;
+    const viewportBuffer = 300;
+
+    const viewLeft = -stagePosition.x / zoom;
+    const viewTop = -stagePosition.y / zoom;
+    const viewRight = viewLeft + width / zoom;
+    const viewBottom = viewTop + height / zoom;
+
+    return notes.filter((note) => {
+      const noteWidth = cardWidth;
+      const noteHeight = Number(note.height) || defaultCardHeight;
+      const noteLeft = note.x;
+      const noteTop = note.y;
+      const noteRight = noteLeft + noteWidth;
+      const noteBottom = noteTop + noteHeight;
+
+      return (
+        noteRight >= viewLeft - viewportBuffer &&
+        noteLeft <= viewRight + viewportBuffer &&
+        noteBottom >= viewTop - viewportBuffer &&
+        noteTop <= viewBottom + viewportBuffer
+      );
+    });
+  }, [notes, stagePosition.x, stagePosition.y, zoom, width, height]);
+
+  const isInteractiveMode = cursorMode !== 'drag';
 
 
   return (
@@ -97,11 +149,12 @@ const NotesCanvas = ({
         scaleY={zoom}
         onMouseDown={handleMouseDown}
         onClick={handleClick}
+        onDragMove={handleDragMove}
         onDragEnd={handleDragEnd}
         draggable={cursorMode === 'drag'}
       >
-        <Layer>
-          {notes.map((note) => (
+        <Layer listening={isInteractiveMode} hitGraphEnabled={isInteractiveMode}>
+          {visibleNotes.map((note) => (
             <NoteCard
               key={note.id}
               note={note}

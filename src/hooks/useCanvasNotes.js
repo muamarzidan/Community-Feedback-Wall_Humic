@@ -141,6 +141,7 @@ export const useCanvasNotes = () => {
       userReactions: apiNote.user_reactions || [],
       x: position.x,
       y: position.y,
+      height: Number(apiNote.height) || 0,
       createdAt: apiNote.created_at,
       updatedAt: apiNote.updated_at,
     };
