@@ -122,26 +122,23 @@ function App() {
       });
     } catch (error) {
       console.error('Error saving note:', error);
-      
-      let errorMessage = 'Failed to save note';
-      
-      if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.response?.data?.errors) {
-        const errors = error.response.data.errors;
-        const firstErrorKey = Object.keys(errors)[0];
-        if (firstErrorKey && errors[firstErrorKey]?.[0]) {
-          errorMessage = errors[firstErrorKey][0];
-        }
-      } else if (error.message) {
-        errorMessage = error.message;
+
+      const statusCode = error?.response?.status;
+      if (!error?.response) {
+        setToast({
+          isOpen: true,
+          message: 'Network error. Please check your connection and try again.',
+          type: 'error'
+        });
+      } else if (statusCode >= 500) {
+        setToast({
+          isOpen: true,
+          message: 'Server error occurred. Please try again later.',
+          type: 'error'
+        });
       }
-      
-      setToast({
-        isOpen: true,
-        message: errorMessage,
-        type: 'error'
-      });
+
+      throw error;
     };
   };
   const handleDeleteNote = async (noteId) => {

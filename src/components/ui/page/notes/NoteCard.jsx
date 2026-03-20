@@ -336,11 +336,10 @@ const NoteCard = ({ note, onEdit, onDelete, onReactionUpdate, onGuestWarning, on
             width={contentWidth}
             height={176}
             cornerRadius={8}
-            fill="#FFFFFFFF"
           />
           <Image
-            x={padding + 2}
-            y={imageY + 2}
+            x={padding + 0}
+            y={imageY + 0}
             image={image}
             width={contentWidth}
             height={172}

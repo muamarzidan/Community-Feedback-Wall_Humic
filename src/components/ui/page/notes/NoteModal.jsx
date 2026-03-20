@@ -9,13 +9,20 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
     title: '',
     description: '',
     email: '',
-    backgroundColor: '#fbbf24',
+    backgroundColor: '',
     image: null,
     imagePreview: null,
     delete_image: false
   });
   const [imageLoading, setImageLoading] = useState(false);
   const [imageError, setImageError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({
+    title: '',
+    description: '',
+    email: '',
+    backgroundColor: ''
+  });
+  const [submitError, setSubmitError] = useState('');
   
   const colorOptions = [
     { name: 'Yellow', value: '#FFFB00' },
@@ -135,7 +142,7 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
         title: note.title || '',
         description: note.description || '',
         email: note.email || '',
-        backgroundColor: note.backgroundColor || '#fbbf24',
+        backgroundColor: note.backgroundColor || '',
         image: null,
         imagePreview: note.image || null,
         delete_image: false
@@ -145,33 +152,57 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
         title: '',
         description: '',
         email: '',
-        backgroundColor: '#fbbf24',
+        backgroundColor: '',
         image: null,
         imagePreview: null,
         delete_image: false
       });
     };
+    setFieldErrors({
+      title: '',
+      description: '',
+      email: '',
+      backgroundColor: ''
+    });
+    setSubmitError('');
+    setImageError('');
   }, [note, isOpen]);
-  
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
+
+  const validateForm = () => {
+    const nextErrors = {
+      title: '',
+      description: '',
+      email: '',
+      backgroundColor: ''
+    };
+
     if (!formData.title.trim()) {
-      alert('Title is required');
-      return;
+      nextErrors.title = 'Title is required.';
     }
     if (!formData.description.trim()) {
-      alert('Description is required');
-      return;
+      nextErrors.description = 'Description is required.';
     }
     if (!formData.backgroundColor) {
-      alert('Please select a background color');
-      return;
+      nextErrors.backgroundColor = 'Please select a background color.';
     }
     if (!isAuthenticated() && !formData.email.trim()) {
-      alert('Email is required for guest users');
+      nextErrors.email = 'Email is required for guest users.';
+    }
+
+    setFieldErrors(nextErrors);
+    return !Object.values(nextErrors).some(Boolean);
+  };
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitError('');
+
+    if (!validateForm()) {
       return;
-    };
+    }
+    if (imageError && !imageError.startsWith('✓')) {
+      return;
+    }
     
     const calculatedHeight = calculateNoteHeight();
     const noteData = {
@@ -183,14 +214,34 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
     };
 
     delete noteData.imagePreview;
-    
-    onSave(noteData);
-    onClose();
+
+    try {
+      await onSave(noteData);
+    } catch (error) {
+      const responseErrors = error?.response?.data?.errors;
+      if (responseErrors) {
+        setFieldErrors(prev => ({
+          ...prev,
+          title: responseErrors.title?.[0] || prev.title,
+          description: responseErrors.description?.[0] || prev.description,
+          email: responseErrors.email?.[0] || prev.email,
+          backgroundColor: responseErrors.color?.[0] || prev.backgroundColor,
+        }));
+      }
+
+      const fallbackMessage = error?.response?.data?.message || error?.message || 'Failed to save note. Please try again.';
+      setSubmitError(fallbackMessage);
+    }
   };
   const handleChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
+    }));
+    setSubmitError('');
+    setFieldErrors(prev => ({
+      ...prev,
+      [field]: ''
     }));
   };
   const handleImageChange = async (e) => {
@@ -227,6 +278,7 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
       }));
 
       setImageError('');
+      setSubmitError('');
     } catch (error) {
       console.error('Error processing image:', error);
       setImageError('Failed to process image. Please try again.');
@@ -241,6 +293,7 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
       imagePreview: null,
       delete_image: note?.image ? true : false
     }));
+    setImageError('');
   };
 
   if (!isOpen) return null;
@@ -262,6 +315,11 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
         </div>
         {/* Form */}
         <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-3">
+          {submitError && (
+            <div className="p-2 text-sm text-red-700 border border-red-300 rounded-lg bg-red-50">
+              {submitError}
+            </div>
+          )}
           {/* Email (Only for guest users) */}
           {!isAuthenticated() && (
             <div>
@@ -276,7 +334,11 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
                 placeholder="Add email..."
                 required
               />
-              <p className="mt-1 text-xs text-gray-500">Required for guest users</p>
+              {fieldErrors.email ? (
+                <p className="mt-1 text-xs text-red-600">{fieldErrors.email}</p>
+              ) : (
+                <p className="mt-1 text-xs text-gray-500">Required for guest users</p>
+              )}
             </div>
           )}
           {/* Title */}
@@ -292,6 +354,9 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
               placeholder="Add title..."
               required
             />
+            {fieldErrors.title && (
+              <p className="mt-1 text-xs text-red-600">{fieldErrors.title}</p>
+            )}
           </div>
           {/* Description */}
           <div>
@@ -306,6 +371,9 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
               placeholder="Write your feedback..."
               required
             />
+            {fieldErrors.description && (
+              <p className="mt-1 text-xs text-red-600">{fieldErrors.description}</p>
+            )}
           </div>
           {/* Background Color */}
           <div>
@@ -328,18 +396,12 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
                 />
               ))}
             </div>
+            {fieldErrors.backgroundColor && (
+              <p className="mt-1 text-xs text-red-600">{fieldErrors.backgroundColor}</p>
+            )}
           </div>
           {isAuthenticated() && (
             <div>
-              {imageError && (
-                <div className={`mb-2 p-2 text-sm rounded-lg ${
-                  imageError.startsWith('✓') 
-                    ? 'bg-green-100 text-green-700 border border-green-300' 
-                    : 'bg-red-100 text-red-700 border border-red-300'
-                }`}>
-                  {imageError}
-                </div>
-              )}
               {formData.imagePreview ? (
                 <div className="relative">
                   <img
@@ -383,6 +445,15 @@ const NoteModal = ({ isOpen, onClose, onSave, note = null }) => {
               <p className="mt-1 text-xs text-gray-500">
                 JPG, PNG or WEBP. Max 5MB and 3000x3000px dimension.
               </p>
+              {imageError && (
+                <div className={`mb-2 p-2 text-sm rounded-lg ${
+                  imageError.startsWith('✓') 
+                    ? 'bg-green-100 text-green-700 border border-green-300' 
+                    : 'bg-red-100 text-red-700 border border-red-300'
+                }`}>
+                  {imageError}
+                </div>
+              )}
             </div>
           )}
           {/* Action Buttons */}
